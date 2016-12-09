@@ -1,4 +1,6 @@
 # libgoboard
+[![Build Status](https://travis-ci.org/sjtu-ai-go/libgoboard.svg)](https://travis-ci.org/sjtu-ai-go/libgoboard)
+[![GNU3 License](https://img.shields.io/github/license/sjtu-ai-go/libgoboard.svg)](https://github.com/sjtu-ai-go/libgoboard/blob/master/LICENSE)
 
 ## Usage
 ```
