@@ -48,5 +48,5 @@ if (libgoboard_build_tests)
     ###############################
     add_executable(board-test src/board_test.cpp)
     target_link_libraries(board-test goboard gtest gtest_main)
-    add_test(board_test board_test)
+    add_test(board_test board-test)
 endif()
