@@ -20,7 +20,9 @@ include_directories(vendor/CompressedGrid)
 ##################################
 # libgo-common
 ##################################
-add_subdirectory(vendor/libgo-common)
+if (NOT TARGET go-common)
+    add_subdirectory(vendor/libgo-common)
+endif()
 set(libgo-common_SOURCE_DIR vendor/libgo-common)
 set(libgo_LIBS go-common)
 include_directories(${libgo-common_INCLUDE_DIR})
