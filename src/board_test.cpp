@@ -386,3 +386,31 @@ TEST(BoardTest, TestBoardClassLegalMove1)
     EXPECT_EQ(7u, wValid.size()); // (7, 7) is Ko!
 
 }
+
+TEST(BoardTest, TestBoardEyes)
+{
+    using namespace board;
+    auto logger = getGlobalLogger();
+    logger->set_level(spdlog::level::debug);
+
+    Board<5, 5> b;
+    using BT = Board<5, 5>;
+    using PT = typename BT::PointType;
+    GraphItem graph[5][5] = {
+            {O,     1_w,    O,      O,      7_w},
+            {2_w,   3_w,    4_w,    5_w,    6_w},
+            {8_w,   O,      9_b,    O,      O},
+            {10_b,  11_b,   12_b,   13_b,   O},
+            {O,     O,      O,      O,      O}
+    };
+    auto points = graphToPoint<5, 5>(graph);
+    std::for_each(points.begin(), points.end(), [&](std::pair<board::GridPoint<5, 5>, board::Player> item) {
+        b.place(item.first, item.second);
+    });
+    EXPECT_TRUE(b.isTrueEye(PT {0, 0}, Player::W));
+    EXPECT_FALSE(b.isTrueEye(PT {0, 0}, Player::B));
+    EXPECT_FALSE(b.isEye(PT {0, 2}, Player::W));
+    EXPECT_FALSE(b.isSemiEye(PT {0, 3}, Player::W));
+    EXPECT_TRUE(b.isFakeEye(PT {2, 1}, Player::B));
+    EXPECT_TRUE(b.isFakeEye(PT {2, 1}, Player::W));
+}

@@ -165,6 +165,11 @@ namespace board
             return groupNodeList_.cend();
         }
 
+        bool isEye(PointType p, Player player);
+        bool isSemiEye(PointType p, Player player);
+        bool isFakeEye(PointType p, Player player);
+        bool isTrueEye(PointType p, Player player);
+
         friend std::ostream& operator<< <>(std::ostream&, const Board&);
 
     private:
@@ -326,6 +331,59 @@ namespace board
             return Board::PositionStatus::SUICIDE;
         return Board::PositionStatus::OK;
     };
+
+    template<std::size_t W, std::size_t H>
+    bool Board<W, H>::isEye(PointType p, Player player)
+    {
+        if (getPointState(p) != PointState::NA)
+            return false;
+        bool isEye = true;
+        p.for_each_adjacent([&](PointType adjP){
+            if (getPointState(adjP) != getPointStateFromPlayer(player))
+                isEye = false;
+        });
+        return isEye;
+    }
+
+    template<std::size_t W, std::size_t H>
+    bool Board<W, H>::isSemiEye(PointType p, Player player)
+    {
+        if (!isEye(p, player))
+            return false;
+        std::size_t oppo_cnt = 0, empty_cnt = 0, all_cnt = 0;
+        p.for_each_adjacent([&](PointType adjP) {
+            PointState ps = getPointState(adjP);
+            ++all_cnt;
+            if (ps == PointState::NA) {
+                if (!isEye(adjP, player))
+                    ++empty_cnt;
+            } else
+                if (ps != getPointStateFromPlayer(player))
+                    ++oppo_cnt;
+        });
+        return (all_cnt == 4 && oppo_cnt == 1 && empty_cnt == 1) ||
+                (all_cnt < 4 && oppo_cnt == 0 && empty_cnt == 1);
+    }
+
+    template<std::size_t W, std::size_t H>
+    bool Board<W, H>::isFakeEye(PointType p, Player player)
+    {
+        std::size_t oppo_cnt = 0, all_cnt = 0;
+        p.for_each_adjacent([&](PointType adjP) {
+            ++all_cnt;
+            PointState ps = getPointState(adjP);
+            if (ps != PointState::NA && ps != getPointStateFromPlayer(player))
+                ++oppo_cnt;
+        });
+        return (all_cnt < 4 && oppo_cnt >= 1) ||
+                (all_cnt == 4 && oppo_cnt >=2);
+    }
+
+    template<std::size_t W, std::size_t H>
+    bool Board<W, H>::isTrueEye(PointType p, Player player)
+    {
+        return isEye(p, player) && !isFakeEye(p, player);
+    }
 
     template<std::size_t W, std::size_t H>
     std::ostream &  operator<<(std::ostream & o, const Board<W, H> & b) {

@@ -11,15 +11,9 @@ namespace board
     enum struct PointState { NA, W, B }; // state of a point on board
     static const std::size_t PointStateBits = 2; // Can be represented in 2 bits since 2 < 2 ^ 2
     enum struct Player { W, B }; // White or Black side
-    inline PointState getPointStateFromPlayer(Player p)
+    inline constexpr PointState getPointStateFromPlayer(Player p)
     {
-        switch(p)
-        {
-            case Player::W:
-                return PointState::W;
-            case Player::B:
-                return PointState::B;
-        }
+        return p == Player::B ? PointState::B : PointState::W;
     }
     inline Player getOpponentPlayer(Player p)
     {
