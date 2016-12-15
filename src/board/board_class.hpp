@@ -96,6 +96,21 @@ namespace board
         {
         }
 
+        Board& operator=(const Board &other)
+        {
+            if (this != &other)
+            {
+                boardGrid_ = other.boardGrid_;
+                groupNodeList_ = other.groupNodeList_;
+                posGroup_ = decltype(posGroup_)
+                            (other.posGroup_, getMapFromOldItToNewIt(groupNodeList_, other.groupNodeList_)),
+                lastStateHash_ = other.lastStateHash_;
+                curStateHash_ = other.curStateHash_;
+                step_ = other.step_;
+            }
+            return *this;
+        }
+
         void clear()
         {
             groupNodeList_.clear();

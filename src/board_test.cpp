@@ -414,3 +414,15 @@ TEST(BoardTest, TestBoardEyes)
     EXPECT_TRUE(b.isFakeEye(PT {2, 1}, Player::B));
     EXPECT_TRUE(b.isFakeEye(PT {2, 1}, Player::W));
 }
+
+TEST(BoardTest, TestBoardAssignment)
+{
+    using namespace board;
+    Board<9, 9> b, otherB;
+    using PT = typename Board<9, 9>::PointType;
+    b.place(PT {0, 2}, Player::B);
+    Board<9, 9> c = b;
+    EXPECT_EQ(PointState::B ,c.getPointState(PT {0, 2}));
+    c = otherB;
+    EXPECT_EQ(PointState::NA, c.getPointState(PT {0, 2}));
+}
