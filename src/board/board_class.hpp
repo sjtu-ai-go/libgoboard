@@ -169,6 +169,8 @@ namespace board
         bool isSemiEye(PointType p, Player player);
         bool isFakeEye(PointType p, Player player);
         bool isTrueEye(PointType p, Player player);
+        bool isSelfAtari(PointType p, Player player);
+        std::vector<PointType> getAllGoodPosition(Player player);
 
         friend std::ostream& operator<< <>(std::ostream&, const Board&);
 
@@ -383,6 +385,25 @@ namespace board
     bool Board<W, H>::isTrueEye(PointType p, Player player)
     {
         return isEye(p, player) && !isFakeEye(p, player);
+    }
+
+    template<std::size_t W, std::size_t H>
+    bool Board<W, H>::isSelfAtari(PointType p, Player player)
+    {
+        if (getPointState(p) != PointState::NA)
+            return false;
+
+    }
+
+    template<std::size_t W, std::size_t H>
+    auto Board<W, H>::getAllGoodPosition(Player player) -> std::vector<PointType>
+    {
+        // TODO: Judge isSelfAtari
+        auto validPos = getAllValidPosition(player);
+        validPos.erase(std::remove_if(validPos.begin(), validPos.end(), [&](PointType p) {
+            return isTrueEye(p, player);
+        }), validPos.end());
+        return validPos;
     }
 
     template<std::size_t W, std::size_t H>
