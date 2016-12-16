@@ -1,9 +1,12 @@
 [submodule "vendor/libgo-common"]
 	path = vendor/libgo-common
 	url = https://github.com/sjtu-ai-go/libgo-common.git
+	branch = master
 [submodule "vendor/CompressedGrid"]
 	path = vendor/CompressedGrid
 	url = https://github.com/sjtu-ai-go/CompressedGrid.git
+	branch = master
 [submodule "vendor/googletest"]
 	path = vendor/googletest
 	url = https://github.com/sjtu-ai-go/googletest.git
+	branch = master
