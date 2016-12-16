@@ -368,7 +368,7 @@ namespace board
         if (!isEye(p, player))
             return false;
         std::size_t oppo_cnt = 0, empty_cnt = 0, all_cnt = 0;
-        p.for_each_adjacent([&](PointType adjP) {
+        p.for_each_diag([&](PointType adjP) {
             PointState ps = getPointState(adjP);
             ++all_cnt;
             if (ps == PointState::NA) {
@@ -386,7 +386,7 @@ namespace board
     bool Board<W, H>::isFakeEye(PointType p, Player player)
     {
         std::size_t oppo_cnt = 0, all_cnt = 0;
-        p.for_each_adjacent([&](PointType adjP) {
+        p.for_each_diag([&](PointType adjP) {
             ++all_cnt;
             PointState ps = getPointState(adjP);
             if (ps != PointState::NA && ps != getPointStateFromPlayer(player))

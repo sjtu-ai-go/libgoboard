@@ -68,6 +68,26 @@ namespace board
             GridPoint gp = *this;
             return gp.down();
         }
+        GridPoint left_up_point() const
+        {
+            GridPoint gp = *this;
+            return gp.left().up();
+        }
+        GridPoint left_down_point() const
+        {
+            GridPoint gp = *this;
+            return gp.left().down();
+        }
+        GridPoint right_up_point() const
+        {
+            GridPoint gp = *this;
+            return gp.right().up();
+        }
+        GridPoint right_down_point() const
+        {
+            GridPoint gp = *this;
+            return gp.right().down();
+        }
         GridPoint next_point() const
         {
             GridPoint gp = *this;
@@ -93,6 +113,48 @@ namespace board
             if (!this->is_top()) v.push_back(up_point());
             if (!this->is_right()) v.push_back(right_point());
             if (!this->is_bottom()) v.push_back(down_point());
+            return v;
+        }
+        template<typename FT>
+        void for_each_diag(FT f) const
+        {
+            if (!this->is_left() && !this->is_top()) f(left_up_point());
+            if (!this->is_left() && !this->is_bottom()) f(left_down_point());
+            if (!this->is_right() && !this->is_top()) f(right_up_point());
+            if (!this->is_right() && !this->is_bottom()) f(right_down_point());
+        }
+        std::vector<GridPoint> get_diag_point() const
+        {
+            std::vector<GridPoint> v;
+            if (!this->is_left() && !this->is_top()) v.push_back(left_up_point());
+            if (!this->is_left() && !this->is_bottom()) v.push_back(left_down_point());
+            if (!this->is_right() && !this->is_top()) v.push_back(right_up_point());
+            if (!this->is_right() && !this->is_bottom()) v.push_back(right_down_point());
+            return v;
+        }
+        template<typename FT>
+        void for_each_wrap8(FT f) const
+        {
+            if (!this->is_left()) f(left_point());
+            if (!this->is_top()) f(up_point());
+            if (!this->is_right()) f(right_point());
+            if (!this->is_bottom()) f(down_point());
+            if (!this->is_left() && !this->is_top()) f(left_up_point());
+            if (!this->is_left() && !this->is_bottom()) f(left_down_point());
+            if (!this->is_right() && !this->is_top()) f(right_up_point());
+            if (!this->is_right() && !this->is_bottom()) f(right_down_point());
+        }
+        std::vector<GridPoint> get_wrap8_point() const
+        {
+            std::vector<GridPoint> v;
+            if (!this->is_left()) v.push_back(left_point());
+            if (!this->is_top()) v.push_back(up_point());
+            if (!this->is_right()) v.push_back(right_point());
+            if (!this->is_bottom()) v.push_back(down_point());
+            if (!this->is_left() && !this->is_top()) v.push_back(left_up_point());
+            if (!this->is_left() && !this->is_bottom()) v.push_back(left_down_point());
+            if (!this->is_right() && !this->is_top()) v.push_back(right_up_point());
+            if (!this->is_right() && !this->is_bottom()) v.push_back(right_down_point());
             return v;
         }
         bool operator ==(const GridPoint &other)
