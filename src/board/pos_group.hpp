@@ -12,9 +12,7 @@
 #include <iterator>
 #include <functional>
 #include <array>
-#include <unordered_map>
-#include <boost/variant/variant.hpp>
-#include <boost/variant/get.hpp>
+#include <vector>
 #include "grid_point.hpp"
 #include "group_node.hpp"
 #include "logger.hpp"
@@ -38,8 +36,24 @@ namespace board
                 return h(&(*gci));
             }
         };
+
+        struct ItemType
+        {
+            union Value
+            {
+                GroupIterator groupIterator;
+                PointType pointType;
+
+                Value(GroupIterator gi): groupIterator(gi) {}
+                Value(PointType p): pointType(p) {}
+                Value() {}
+            } value;
+            enum struct Type {GroupIterator, PointType} type;
+            ItemType()
+            {
+            }
+        };
     protected:
-        using ItemType = boost::variant<GroupIterator, PointType>;
         mutable std::array<ItemType, W * H> arr;
 
         static std::size_t pointToIndex(PointType p)
@@ -50,27 +64,31 @@ namespace board
         PointType findfa(PointType p) const
         {
             std::size_t idx = pointToIndex(p);
-            if (PointType *pp = boost::get<PointType>(&arr[idx]))
+            if (arr[idx].type == ItemType::Type::GroupIterator)
             {
-                arr[idx] = findfa(*pp);
-                return boost::get<PointType>(arr[idx]);
+                return p;
             }
             else
-                return p;
+            {
+                arr[idx].value.pointType = findfa(arr[idx].value.pointType);
+                return arr[idx].value.pointType;
+            }
         }
 
     public:
         PosGroup() = default;
         PosGroup(const PosGroup& other,
-                 const std::unordered_map<GroupConstIterator , GroupIterator, GroupConstIteratorHash> &oldToNewMap):
+                 const std::vector<std::pair<GroupConstIterator , GroupIterator>> &oldToNewMap):
                 arr(other.arr), logger(other.logger)
         {
             PointType::for_all([&](PointType p) {
-                if (GroupIterator *pgi = boost::get<GroupIterator>(&arr[pointToIndex(p)]))
+                if (arr[pointToIndex(p)].type == ItemType::Type::GroupIterator)
                 {
-                    auto it = oldToNewMap.find(*pgi);
-                    assert(it != oldToNewMap.end());
-                    *pgi = it->second;
+                    using PairT = std::pair<GroupConstIterator, GroupConstIterator>;
+                    auto it = std::find_if(oldToNewMap.cbegin(), oldToNewMap.cend(), [&](const PairT &pair) {
+                        return pair.first == arr[pointToIndex(p)].value.groupIterator;
+                    });
+                    arr[pointToIndex(p)].value.groupIterator = it->second;
                 }
             });
         }
@@ -80,17 +98,21 @@ namespace board
         }
         void fill(GroupIterator default_it)
         {
-            std::fill(std::begin(arr), std::end(arr), default_it);
+            std::for_each(std::begin(arr), std::end(arr), [&](ItemType &item) {
+                item.type = ItemType::Type::GroupIterator;
+                item.value.groupIterator = default_it;
+            });
         }
         GroupIterator get(PointType p) const
         {
             PointType fa = findfa(p);
-            return boost::get<GroupIterator>(arr[pointToIndex(fa)]);
+            return arr[pointToIndex(fa)].value.groupIterator;
         }
         // Use this only if this is the first time set(*, this_iterator) is called! otherwise please use merge()!
         void set(PointType p, GroupIterator it)
         {
-            arr[pointToIndex(p)] = it;
+            arr[pointToIndex(p)].type = ItemType::Type::GroupIterator;
+            arr[pointToIndex(p)].value.groupIterator = it;
         }
 
         // Merge p2 into p1
@@ -98,8 +120,10 @@ namespace board
         void merge(PointType p1, PointType p2)
         {
             PointType fa1 = findfa(p1), fa2 = findfa(p2);
-            if (fa1 != fa2)
-                arr[pointToIndex(fa2)] = p1;
+            if (fa1 != fa2) {
+                arr[pointToIndex(fa2)].type = ItemType::Type::PointType;
+                arr[pointToIndex(fa2)].value.pointType = p1;
+            }
         }
 
     };

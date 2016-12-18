@@ -16,7 +16,7 @@
 #include "pos_group.hpp"
 #include "board_grid.hpp"
 #include <ostream>
-#include <unordered_map>
+#include <vector>
 #include <cassert>
 #include <logger.hpp>
 #include <spdlog/fmt/ostr.h>
@@ -64,21 +64,22 @@ namespace board
         static const std::size_t h = H;
     private:
 
-        std::unordered_map<GroupConstIterator, GroupIterator, typename PosGroupType::GroupConstIteratorHash>
+        std::vector< std::pair<GroupConstIterator, GroupIterator> >
         getMapFromOldItToNewIt(GroupListType &newList,
                                const GroupListType &oldList)
         {
             assert(newList.size() == oldList.size());
-            std::unordered_map<GroupConstIterator , GroupIterator, typename PosGroupType::GroupConstIteratorHash> um;
+            std::vector< std::pair<GroupConstIterator, GroupIterator>> vmap;
+            vmap.reserve(32);
 
             auto it_new = newList.begin();
             auto it_old = oldList.cbegin();
+            vmap.push_back(std::make_pair(oldList.cend(), newList.end()));
             for(; it_new != newList.end() && it_old != oldList.end(); ++it_new, ++it_old)
             {
-                um[it_old] = it_new;
+                vmap.push_back(std::make_pair(it_old, it_new));
             }
-            um[oldList.end()] = newList.end();
-            return um;
+            return vmap;
         };
     public:
 
@@ -195,6 +196,7 @@ namespace board
         {
             return posGroup_.get(p);
         }
+        PositionStatus getPosStatusAndPlace(PointType p, Player player);
         void removeGroup(GroupIterator group);
         void mergeGroupAt(PointType thisPoint, PointType otherPoint);
         std::vector<GroupIterator> getAdjacentGroups(PointType p);
@@ -333,9 +335,16 @@ namespace board
     template<std::size_t W, std::size_t H>
     auto Board<W,H>::getPosStatus(PointType p, Player player) -> typename Board::PositionStatus
     {
+        Board testBoard = *this;
+        return testBoard.getPosStatusAndPlace(p, player);
+    };
+
+    template<std::size_t W, std::size_t H>
+    auto Board<W, H>::getPosStatusAndPlace(PointType p, Player player) -> typename Board::PositionStatus
+    {
         if (getPointState(p) != PointState::NA)
             return Board::PositionStatus::NOTEMPTY;
-        Board testBoard = *this;
+        Board &testBoard = *this;
         logger->trace("After copy: {}", testBoard);
 
         std::size_t last2hash = testBoard.lastStateHash_;
@@ -347,7 +356,7 @@ namespace board
         if (testBoard.getPointState(p) == PointState::NA)
             return Board::PositionStatus::SUICIDE;
         return Board::PositionStatus::OK;
-    };
+    }
 
     template<std::size_t W, std::size_t H>
     bool Board<W, H>::isEye(PointType p, Player player)
@@ -407,7 +416,7 @@ namespace board
     {
         if (getPointState(p) != PointState::NA)
             return false;
-
+        return false;
     }
 
     template<std::size_t W, std::size_t H>
