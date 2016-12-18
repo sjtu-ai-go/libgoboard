@@ -455,3 +455,13 @@ TEST(BoardTest, TestBoard100GetGoodPositionSpeed)
         EXPECT_FALSE(vec.empty());
     }
 }
+
+TEST(BoardTest, TestBoard100RandomScatter)
+{
+    using namespace board;
+    Board<19, 19> bs[100];
+    for (std::size_t i=0; i<100; ++i)
+    {
+        randomScatter(bs[i], 100);
+    }
+}

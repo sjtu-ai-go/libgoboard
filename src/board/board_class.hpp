@@ -18,6 +18,9 @@
 #include <ostream>
 #include <vector>
 #include <cassert>
+#include <memory>
+#include <map>
+#include <queue>
 #include <logger.hpp>
 #include <spdlog/fmt/ostr.h>
 
@@ -198,6 +201,7 @@ namespace board
         }
         PositionStatus getPosStatusAndPlace(PointType p, Player player);
         void removeGroup(GroupIterator group);
+        void removeGroupFromPos(PointType p);
         void mergeGroupAt(PointType thisPoint, PointType otherPoint);
         std::vector<GroupIterator> getAdjacentGroups(PointType p);
         static inline bool GroupIteratorLess(const GroupIterator& it1, const GroupIterator& it2)
@@ -229,18 +233,59 @@ namespace board
         std::vector<PointType> point_to_remove;
         point_to_remove.reserve(W * H);
         PointType::for_all([&](PointType p) {
-           if (getPointGroup(p) == group)
-           {
-               std::vector<GroupIterator> adjGroups = getAdjacentGroups(p);
-               std::for_each(adjGroups.begin(), adjGroups.end(), [&](GroupIterator adjGroup) {
-                  if (adjGroup != group) adjGroup->setLiberty(p, true);
-               });
-               boardGrid_.set(p, PointState::NA);
-               // posGroup_.set(p, groupNodeList_.end());
-               // cannot delete here, since union-set would stuck into inconsistent state
-               point_to_remove.push_back(p);
-           }
+            if (getPointGroup(p) == group)
+            {
+                std::vector<GroupIterator> adjGroups = getAdjacentGroups(p);
+                std::for_each(adjGroups.begin(), adjGroups.end(), [&](GroupIterator adjGroup) {
+                    if (adjGroup != group) adjGroup->setLiberty(p, true);
+                });
+                boardGrid_.set(p, PointState::NA);
+                // posGroup_.set(p, groupNodeList_.end());
+                // cannot delete here, since union-set would stuck into inconsistent state
+                point_to_remove.push_back(p);
+            }
         });
+        std::for_each(point_to_remove.begin(), point_to_remove.end(), [&](PointType p){
+            posGroup_.set(p, groupNodeList_.end());
+        });
+        groupNodeList_.erase(group);
+    }
+
+    template<std::size_t W, std::size_t H>
+    void Board<W, H>::removeGroupFromPos(PointType p)
+    {
+        GroupIterator group = getPointGroup_(p);
+        std::vector<PointType> point_to_remove;
+        point_to_remove.reserve(W * H);
+
+        std::queue<PointType> point_to_visit;
+        bool visited[W * H] {};
+        point_to_visit.push(p);
+        while (!point_to_visit.empty())
+        {
+            PointType p = point_to_visit.front();
+            point_to_visit.pop();
+
+            p.for_each_adjacent([&](PointType adjP) {
+                GroupIterator adjGroup = getPointGroup_(adjP);
+                if (adjGroup == group)
+                {
+                    if (!visited[adjP.x * H + adjP.y])
+                    {
+                        point_to_visit.push(adjP);
+                        visited[adjP.x * H + adjP.y] = true;
+                    }
+                } else if (adjGroup != groupNodeList_.end())
+                {
+                    adjGroup->setLiberty(p, true);
+                }
+            });
+
+            boardGrid_.set(p, PointState::NA);
+            // posGroup_.set(p, groupNodeList_.end());
+            // cannot delete here, since union-set would stuck into inconsistent state
+            point_to_remove.push_back(p);
+        }
         std::for_each(point_to_remove.begin(), point_to_remove.end(), [&](PointType p){
             posGroup_.set(p, groupNodeList_.end());
         });
@@ -275,13 +320,16 @@ namespace board
         });
 
         // Update liberty and remove opponent's dead groups (liberty of our group may change)
-        std::for_each(adjGroups.begin(), adjGroups.end(), [&](GroupIterator pgn)
-        {
-            pgn->setLiberty(p, false);
-            if (pgn->getPlayer() == opponent && pgn->getLiberty() == 0)
+        p.for_each_adjacent([&](PointType adjP) {
+            GroupIterator group = getPointGroup_(adjP);
+            if (group != groupEnd())
             {
-                logger->trace("Removing group with liberty{}", pgn->getLiberty());
-                removeGroup(pgn); // removing group A won't affect liberty of group B (where A, B belongs to same player)
+                group->setLiberty(p, false);
+                if (group->getPlayer() == opponent && group->getLiberty() == 0)
+                {
+                    logger->trace("Removing group with liberty {}", group->getLiberty());
+                    removeGroupFromPos(adjP);
+                }
             }
         });
 
