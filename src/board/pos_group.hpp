@@ -70,7 +70,7 @@ namespace board
                 {
                     auto it = oldToNewMap.find(*pgi);
                     assert(it != oldToNewMap.end());
-                    arr[pointToIndex(p)] = it->second;
+                    *pgi = it->second;
                 }
             });
         }

@@ -66,9 +66,26 @@ TEST(BoardTest, TestGridPoint)
     EXPECT_TRUE(point.is_right());
 }
 
+template<std::size_t W, std::size_t H>
+void randomScatter(board::Board<W, H> &b, std::size_t cnt)
+{
+    using PT = typename board::Board<W, H>::PointType;
+    for (int i=0; i<cnt; ++i)
+    {
+        board::Player p = (board::Player)(std::rand() % 2);
+        char x, y;
+        do
+        {
+            x = std::rand() % W;
+            y = std::rand() % H;
+        } while(b.getPosStatus(PT{x, y}, p) != board::Board<W, H>::PositionStatus::OK);
+        b.place(PT{x, y}, p);
+    }
+};
+
 TEST(BoardTest, TestBoardGridHash)
 {
-    using bg_t = board::BoardGrid<18, 18>;
+    using bg_t = board::BoardGrid<19, 19>;
     bg_t bg;
     using PT = typename bg_t::PointType;
 
@@ -425,4 +442,16 @@ TEST(BoardTest, TestBoardAssignment)
     EXPECT_EQ(PointState::B ,c.getPointState(PT {0, 2}));
     c = otherB;
     EXPECT_EQ(PointState::NA, c.getPointState(PT {0, 2}));
+}
+
+TEST(BoardTest, TestBoard100GetGoodPositionSpeed)
+{
+    using namespace board;
+    Board<19, 19> b;
+    randomScatter(b, 100);
+    for (std::size_t i = 0; i<100; ++i)
+    {
+        auto vec = b.getAllGoodPosition(Player::B);
+        EXPECT_FALSE(vec.empty());
+    }
 }
