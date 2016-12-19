@@ -66,6 +66,7 @@ namespace board
         static const std::size_t w = W;
         static const std::size_t h = H;
     private:
+        PointType lastMovePoint;
 
         std::vector< std::pair<GroupConstIterator, GroupIterator> >
         getMapFromOldItToNewIt(GroupListType &newList,
@@ -86,7 +87,7 @@ namespace board
         };
     public:
 
-        Board(): posGroup_(groupNodeList_.end())
+        Board(): posGroup_(groupNodeList_.end()), lastMovePoint(0, 0)
         {
         }
 
@@ -96,7 +97,8 @@ namespace board
                 posGroup_(other.posGroup_, getMapFromOldItToNewIt(groupNodeList_, other.groupNodeList_)),
                 lastStateHash_(other.lastStateHash_),
                 curStateHash_(other.curStateHash_),
-                step_(other.step_)
+                step_(other.step_),
+                lastMovePoint(other.lastMovePoint)
         {
         }
 
@@ -111,6 +113,7 @@ namespace board
                 lastStateHash_ = other.lastStateHash_;
                 curStateHash_ = other.curStateHash_;
                 step_ = other.step_;
+                lastMovePoint = other.lastMovePoint;
             }
             return *this;
         }
@@ -123,6 +126,7 @@ namespace board
             lastStateHash_ = INIT_LASTSTATEHASH;
             curStateHash_ = INIT_CURSTATEHASH;
             step_ = 0;
+            lastMovePoint.x = 0; lastMovePoint.y = 0;
         }
 
         // Returns color of a point
@@ -377,14 +381,43 @@ namespace board
         logger->trace("last 2 hash: {}, last 1 hash: {}, cur Hash: {}", lastStateHash_, curStateHash_, hash_v);
         lastStateHash_ = curStateHash_;
         curStateHash_ = hash_v;
+        lastMovePoint = p;
         ++step_;
     }
 
     template<std::size_t W, std::size_t H>
     auto Board<W,H>::getPosStatus(PointType p, Player player) -> typename Board::PositionStatus
     {
-        Board testBoard = *this;
-        return testBoard.getPosStatusAndPlace(p, player);
+        if (getPointState(p) != PointState::NA)
+            return PositionStatus::NOTEMPTY;
+
+        if (p.adjacent_to(lastMovePoint))
+        {
+            Board testBoard = *this;
+            return testBoard.getPosStatusAndPlace(p, player);
+        }
+
+        int our_group_liberty_greater_than_1 = 0, oppo_group_liberty_1 = 0;
+        bool has_free = false;
+        p.for_each_adjacent([&](PointType adjP) {
+            if (!has_free) {
+                auto group = getPointGroup_(adjP);
+                if (group != groupEnd()) {
+                    if (group->getPlayer() == player && group->getLiberty() > 1)
+                        ++our_group_liberty_greater_than_1;
+                    if (group->getPlayer() != player && group->getLiberty() == 1)
+                        ++oppo_group_liberty_1;
+                }
+                else
+                {
+                    has_free = true;
+                }
+            }
+        });
+        if (!has_free && our_group_liberty_greater_than_1 == 0 && oppo_group_liberty_1 == 0)
+            return PositionStatus::SUICIDE;
+
+        return PositionStatus::OK;
     };
 
     template<std::size_t W, std::size_t H>

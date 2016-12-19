@@ -98,6 +98,16 @@ namespace board
             GridPoint gp = *this;
             return --gp;
         }
+
+        bool adjacent_to(GridPoint gp)
+        {
+            bool adj = false;
+            for_each_adjacent([gp, &adj](GridPoint adjP) {
+                adj |= adjP == gp;
+            });
+            return adj;
+        }
+
         template<typename FT>
         void for_each_adjacent(FT f) const
         {
