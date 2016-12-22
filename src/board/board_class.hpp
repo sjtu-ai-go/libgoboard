@@ -497,7 +497,61 @@ namespace board
     {
         if (getPointState(p) != PointState::NA)
             return false;
-        return false;
+
+        int liberty = 4;
+
+        std::vector<GroupConstIterator> groupList;
+        groupList.reserve(4);
+
+        p.for_each_adjacent([&](PointType adjP) {
+            if (getPointState(adjP) == getPointStateFromPlayer(getOpponentPlayer(player)))
+                --liberty;
+            else if (getPointState(adjP) == getPointStateFromPlayer(player))
+                groupList.push_back(getPointGroup(adjP));
+        });
+
+        for (typename std::vector<GroupConstIterator>::iterator iter = groupList.begin(); iter != groupList.end(); ++iter)
+        {
+            bool duplicated = false;
+            for (typename std::vector<GroupConstIterator>::iterator iter2 = groupList.begin(); iter2 != iter; ++iter2)
+                if (*iter == *iter2)
+                {
+                    liberty -= 2;
+                    duplicated = true;
+                }
+
+            if (!duplicated)
+                liberty += (*iter)->getLiberty() - 2;
+        }
+
+        if ((getPointState(p.left_up_point()) == PointState::NA) &&
+                (getPointState(p.left_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
+                (getPointState(p.up_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
+                (getPointGroup(p.left_point()) != getPointGroup(p.up_point())))
+            --liberty;
+
+        if ((getPointState(p.left_down_point()) == PointState::NA) &&
+            (getPointState(p.left_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
+            (getPointState(p.down_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
+            (getPointGroup(p.left_point()) != getPointGroup(p.down_point())))
+            --liberty;
+
+        if ((getPointState(p.right_up_point()) == PointState::NA) &&
+            (getPointState(p.right_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
+            (getPointState(p.up_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
+            (getPointGroup(p.right_point()) != getPointGroup(p.up_point())))
+            --liberty;
+
+        if ((getPointState(p.right_down_point()) == PointState::NA) &&
+            (getPointState(p.right_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
+            (getPointState(p.down_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
+            (getPointGroup(p.right_point()) != getPointGroup(p.down_point())))
+            --liberty;
+
+        if (liberty >= 2)
+            return false;
+
+        return true;
     }
 
     template<std::size_t W, std::size_t H>
