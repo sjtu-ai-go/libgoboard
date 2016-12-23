@@ -487,3 +487,12 @@ TEST(BoardTest, TestBoard100RandomScatter)
         randomScatter(bs[i], 100);
     }
 }
+
+TEST(BoardTest, TBoardTest_TestReqV1Generaton)
+{
+    using namespace board;
+    Board<19, 19> b;
+    randomScatter(b, 100);
+    auto reqv1 = b.generateRequestV1(Player::B);
+    EXPECT_EQ(19 * 19, reqv1.our_group_lib1_size());
+}

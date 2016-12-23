@@ -203,7 +203,7 @@ namespace board
 
         friend std::ostream& operator<< <>(std::ostream&, const Board&);
 
-        gocnn::RequestV1 generateRequestV1();
+        gocnn::RequestV1 generateRequestV1(Player player);
 
     private:
         // Internal use only
@@ -628,11 +628,56 @@ namespace board
     }
 
     template<std::size_t W, std::size_t H>
-    auto Board<W, H>::generateRequestV1() -> gocnn::RequestV1
+    auto Board<W, H>::generateRequestV1(Player player) -> gocnn::RequestV1
     {
         gocnn::RequestV1 reqv1;
-        reqv1.set_board_size(W);
-        // TODO
+        reqv1.set_board_size(W * H);
+        reqv1.mutable_is_simple_ko()->Reserve(reqv1.board_size());
+        reqv1.mutable_our_group_lib1()->Reserve(reqv1.board_size());
+        reqv1.mutable_our_group_lib2()->Reserve(reqv1.board_size());
+        reqv1.mutable_our_group_lib3_plus()->Reserve(reqv1.board_size());
+        reqv1.mutable_oppo_group_lib1()->Reserve(reqv1.board_size());
+        reqv1.mutable_oppo_group_lib2()->Reserve(reqv1.board_size());
+        reqv1.mutable_oppo_group_lib3_plus()->Reserve(reqv1.board_size());
+        PointType::for_all([&](PointType p) {
+            auto group = getPointGroup(p);
+            if (koPlayer == player && koPoint == p)
+                reqv1.add_is_simple_ko(true);
+            else
+                reqv1.add_is_simple_ko(false);
+            bool is_empty = group == groupEnd();
+            if (is_empty)
+            {
+                reqv1.add_our_group_lib1(false);
+                reqv1.add_our_group_lib2(false);
+                reqv1.add_our_group_lib3_plus(false);
+                reqv1.add_oppo_group_lib1(false);
+                reqv1.add_oppo_group_lib2(false);
+                reqv1.add_oppo_group_lib3_plus(false);
+            } else
+            {
+                bool is_our = group->getPlayer() == player;
+                std::size_t lib = group->getLiberty();
+                if (is_our)
+                {
+                    reqv1.add_our_group_lib1(lib == 1);
+                    reqv1.add_our_group_lib2(lib == 2);
+                    reqv1.add_our_group_lib3_plus(lib >= 3);
+                    reqv1.add_oppo_group_lib1(false);
+                    reqv1.add_oppo_group_lib2(false);
+                    reqv1.add_oppo_group_lib3_plus(false);
+                } else
+                {
+                    reqv1.add_oppo_group_lib1(lib == 1);
+                    reqv1.add_oppo_group_lib2(lib == 2);
+                    reqv1.add_oppo_group_lib3_plus(lib >= 3);
+                    reqv1.add_our_group_lib1(false);
+                    reqv1.add_our_group_lib2(false);
+                    reqv1.add_our_group_lib3_plus(false);
+                }
+            }
+        });
+        return reqv1;
     }
 }
 

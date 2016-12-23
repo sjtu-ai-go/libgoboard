@@ -6,11 +6,11 @@ option(libgoboard_build_tests "Build libgoboard's own tests" OFF)
 set(CMAKE_CXX_STANDARD 11)
 
 
-################################
-# Find boost
-################################
-find_package(Boost 1.46 REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
+#################################
+# FindProtobuf
+#################################
+find_package(Protobuf REQUIRED)
+include_directories(${Protobuf_INCLUDE_DIRS})
 
 #################################
 # CompressedGrid
@@ -31,9 +31,10 @@ include_directories(${libgo-common_INCLUDE_DIR})
 # libgoboard
 ##################################
 include_directories(src/)
-add_library(goboard STATIC src/board.cpp)
-target_link_libraries(goboard ${libgo_LIBS})
-set(libgoboard_INCLUDE_DIR ${libgoboard_SOURCE_DIR}/src ${libgo-common_INCLUDE_DIR} ${libgoboard_SOURCE_DIR}/vendor/CompressedGrid ${Boost_INCLUDE_DIRS} PARENT_SCOPE)
+set(libgoboard_SRC src/board.cpp src/message/message.pb.cc)
+add_library(goboard STATIC ${libgoboard_SRC})
+target_link_libraries(goboard ${libgo_LIBS} ${PROTOBUF_LIBRARIES})
+set(libgoboard_INCLUDE_DIR ${libgoboard_SOURCE_DIR}/src ${libgo-common_INCLUDE_DIR} ${libgoboard_SOURCE_DIR}/vendor/CompressedGrid ${Protobuf_INCLUDE_DIRS} PARENT_SCOPE)
 
 #################################
 # tests
