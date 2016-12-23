@@ -42,6 +42,7 @@ addons:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.8
             - george-edison55-precise-backports
+            - sourceline: 'ppa:thopiekar/cura-master'
         packages:
             - clang-3.8
             - g++-4.9
@@ -50,3 +51,4 @@ addons:
             - cmake
             - cmake-data
             - build-essential
+            - libprotobuf-dev
