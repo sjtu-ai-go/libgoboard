@@ -1,13 +1,17 @@
 language: cpp
 
-before_script:
-    - mkdir build
-    - cd build
-    - cmake -Dlibgoboard_build_tests=ON -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DCMAKE_C_COMPILER="${X_CC}" -DCMAKE_CXX_COMPILER="${X_CXX}" ..
+sudo: required
+
+services:
+    - docker
+
+before_install:
+    - docker pull htfy96/build-image
+    - docker run -ti -v $(pwd):/data htfy96/build-image bash -c "cd /data; mkdir -p build && cd build; cmake -Dlibgoboard_build_tests=ON -DCMAKE_C_COMPILER=${X_CC} -DCMAKE_CXX_COMPILER=${X_CXX} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} .." 
 
 script:
-    - make VERBOSE=1 -j4
-    - ctest --output-on-failure
+    - docker run -ti -v $(pwd):/data htfy96/build-image bash -c 'cd /data/build; make -j4'
+    - docker run -ti -v $(pwd):/data htfy96/build-image bash -c 'cd /data/build; ctest --output-on-failure'
 
 matrix:
   include:
@@ -35,20 +39,3 @@ matrix:
           - X_CC=clang-3.8
           - X_CXX=clang++-3.8
           - BUILD_TYPE=Release
-
-addons:
-    apt:
-        sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.8
-            - george-edison55-precise-backports
-            - sourceline: 'ppa:thopiekar/cura-master'
-        packages:
-            - clang-3.8
-            - g++-4.9
-            - g++-5
-            - libboost-all-dev
-            - cmake
-            - cmake-data
-            - build-essential
-            - libprotobuf-dev
