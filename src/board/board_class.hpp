@@ -503,12 +503,21 @@ namespace board
         std::vector<GroupConstIterator> groupList;
         groupList.reserve(4);
 
+        bool captureOpponent = false;
+
         p.for_each_adjacent([&](PointType adjP) {
             if (getPointState(adjP) == getPointStateFromPlayer(getOpponentPlayer(player)))
+            {
+                if (getPointGroup(adjP)->getLiberty() <= 1)
+                    captureOpponent = true;
                 --liberty;
+            }
             else if (getPointState(adjP) == getPointStateFromPlayer(player))
                 groupList.push_back(getPointGroup(adjP));
         });
+
+        if (captureOpponent)
+            return false;
 
         for (typename std::vector<GroupConstIterator>::iterator iter = groupList.begin(); iter != groupList.end(); ++iter)
         {
