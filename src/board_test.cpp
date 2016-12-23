@@ -432,6 +432,28 @@ TEST(BoardTest, TestBoardEyes)
     EXPECT_TRUE(b.isFakeEye(PT {2, 1}, Player::W));
 }
 
+TEST(BoardTest, TestBoardKo)
+{
+    using namespace board;
+    Board<5, 5> b;
+    using BT = Board<5, 5>;
+    using PT = typename BT::PointType;
+    GraphItem graph[5][5] = {
+            {O,     1_b,    2_w,    O,      O},
+            {3_b,   8_w,    4_b,    5_w,    O},
+            {O,     6_b,    7_w,    O,      O},
+            {O,     O,      O,      O,      O},
+            {O,     O,      O,      O,      O}
+    };
+    auto points = graphToPoint<5, 5>(graph);
+    std::for_each(points.begin(), points.end(), [&](std::pair<board::GridPoint<5, 5>, board::Player> item) {
+        b.place(item.first, item.second);
+    });
+    EXPECT_EQ(PT(1, 2), b.getSimpleKoPoint());
+    EXPECT_EQ(BT::PositionStatus::KO, b.getPosStatus(PT {1, 2}, Player::B));
+
+}
+
 TEST(BoardTest, TestBoardAssignment)
 {
     using namespace board;

@@ -167,11 +167,11 @@ namespace board
             if (!this->is_right() && !this->is_bottom()) v.push_back(right_down_point());
             return v;
         }
-        bool operator ==(const GridPoint &other)
+        bool operator ==(const GridPoint &other) const
         {
             return this->x == other.x && this->y == other.y;
         }
-        bool operator !=(const GridPoint &other)
+        bool operator !=(const GridPoint &other) const
         {
             return !(*this == other);
         }

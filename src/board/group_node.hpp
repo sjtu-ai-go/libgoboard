@@ -21,10 +21,11 @@ namespace board
     private:
         Player player;
         CGType liberty_grid;
+        std::size_t stone_cnt;
     public:
         GroupNode() = default;
-        GroupNode(Player p, const CGType &cg = CGType()):
-                player(p), liberty_grid(cg)
+        explicit GroupNode(Player p, std::size_t stone_cnt = 1, const CGType &cg = CGType()):
+                player(p), liberty_grid(cg), stone_cnt(stone_cnt)
         {}
         std::size_t getLiberty() const
         {
@@ -48,12 +49,18 @@ namespace board
             player = p;
         }
 
-        void mergeLiberty(const GroupNode &other)
+        void merge(const GroupNode &other)
         {
             if (&other != this)
             {
                 liberty_grid |= other.liberty_grid;
+                stone_cnt += other.stone_cnt;
             }
+        }
+
+        std::size_t getStoneCnt() const
+        {
+            return stone_cnt;
         }
     };
 }

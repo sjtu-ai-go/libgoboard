@@ -23,6 +23,7 @@
 #include <queue>
 #include <logger.hpp>
 #include <spdlog/fmt/ostr.h>
+#include "message/message.pb.h"
 
 namespace board
 {
@@ -67,6 +68,8 @@ namespace board
         static const std::size_t h = H;
     private:
         PointType lastMovePoint;
+        PointType koPoint; // -1, -1 if none
+        Player koPlayer;
 
         std::vector< std::pair<GroupConstIterator, GroupIterator> >
         getMapFromOldItToNewIt(GroupListType &newList,
@@ -87,7 +90,7 @@ namespace board
         };
     public:
 
-        Board(): posGroup_(groupNodeList_.end()), lastMovePoint(0, 0)
+        Board(): posGroup_(groupNodeList_.end()), lastMovePoint(0, 0), koPoint(-1, -1)
         {
         }
 
@@ -98,7 +101,8 @@ namespace board
                 lastStateHash_(other.lastStateHash_),
                 curStateHash_(other.curStateHash_),
                 step_(other.step_),
-                lastMovePoint(other.lastMovePoint)
+                lastMovePoint(other.lastMovePoint),
+                koPoint(other.koPoint)
         {
         }
 
@@ -114,6 +118,7 @@ namespace board
                 curStateHash_ = other.curStateHash_;
                 step_ = other.step_;
                 lastMovePoint = other.lastMovePoint;
+                koPoint = other.koPoint;
             }
             return *this;
         }
@@ -193,9 +198,12 @@ namespace board
         bool isFakeEye(PointType p, Player player);
         bool isTrueEye(PointType p, Player player);
         bool isSelfAtari(PointType p, Player player);
+        PointType getSimpleKoPoint() const; // Returns simple ko point. (-1, -1) when no simple ko
         std::vector<PointType> getAllGoodPosition(Player player);
 
         friend std::ostream& operator<< <>(std::ostream&, const Board&);
+
+        gocnn::RequestV1 generateRequestV1();
 
     private:
         // Internal use only
@@ -302,7 +310,7 @@ namespace board
         GroupIterator thisGroup = getPointGroup_(thisPoint), thatGroup = getPointGroup_(thatPoint);
         posGroup_.merge(thisPoint, thatPoint);
 
-        thisGroup->mergeLiberty(*thatGroup);
+        thisGroup->merge(*thatGroup);
         groupNodeList_.erase(thatGroup);
     }
 
@@ -323,6 +331,8 @@ namespace board
             logger->trace("Adjacent groups's liberty: {}", group->getLiberty());
         });
 
+        std::size_t removed_stones = 0;
+        PointType last_removed_point {-1, -1};
         // Update liberty and remove opponent's dead groups (liberty of our group may change)
         p.for_each_adjacent([&](PointType adjP) {
             GroupIterator group = getPointGroup_(adjP);
@@ -331,7 +341,9 @@ namespace board
                 group->setLiberty(p, false);
                 if (group->getPlayer() == opponent && group->getLiberty() == 0)
                 {
+                    removed_stones += group->getStoneCnt();
                     logger->trace("Removing group with liberty {}", group->getLiberty());
+                    last_removed_point = adjP;
                     removeGroupFromPos(adjP);
                 }
             }
@@ -340,7 +352,7 @@ namespace board
         // --- Add this group
         logger->trace("Adding this group");
 
-        GroupNodeType gn(player);
+        GroupNodeType gn(player, 1);
         p.for_each_adjacent([&](PointType adjP) {
             logger->trace("Adjacent point {},{} is empty, setting liberty", (int)adjP.x, (int)adjP.y);
             if (getPointState(adjP) == PointState::NA)
@@ -363,6 +375,14 @@ namespace board
                 mergeGroupAt(p, adjP);
             }
         });
+
+        if (thisGroup->getStoneCnt() == 1 && thisGroup->getLiberty() == 1 && removed_stones == 1)
+        {
+            koPoint = last_removed_point;
+            koPlayer = opponent;
+        }
+        else
+            koPoint = PointType(-1, -1);
 
         // --- remove our dead groups
         if (thisGroup->getLiberty() == 0) {
@@ -391,11 +411,8 @@ namespace board
         if (getPointState(p) != PointState::NA)
             return PositionStatus::NOTEMPTY;
 
-        if (p.adjacent_to(lastMovePoint))
-        {
-            Board testBoard = *this;
-            return testBoard.getPosStatusAndPlace(p, player);
-        }
+        if (p == getSimpleKoPoint() && player == koPlayer)
+            return PositionStatus::KO;
 
         int our_group_liberty_greater_than_1 = 0, oppo_group_liberty_1 = 0;
         bool has_free = false;
@@ -575,6 +592,12 @@ namespace board
     }
 
     template<std::size_t W, std::size_t H>
+    auto Board<W, H>::getSimpleKoPoint() const -> PointType
+    {
+        return koPoint;
+    }
+
+    template<std::size_t W, std::size_t H>
     std::ostream &  operator<<(std::ostream & o, const Board<W, H> & b) {
         using PT = typename Board<W, H>::PointType;
         o << "Points" << std::endl;
@@ -602,6 +625,14 @@ namespace board
             o << std::endl;
         }
         return o;
+    }
+
+    template<std::size_t W, std::size_t H>
+    auto Board<W, H>::generateRequestV1() -> gocnn::RequestV1
+    {
+        gocnn::RequestV1 reqv1;
+        reqv1.set_board_size(W);
+        // TODO
     }
 }
 
