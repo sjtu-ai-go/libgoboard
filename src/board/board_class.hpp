@@ -23,7 +23,7 @@
 #include <queue>
 #include <logger.hpp>
 #include <spdlog/fmt/ostr.h>
-#include "message/message.pb.h"
+#include "message.pb.h"
 
 namespace board
 {
