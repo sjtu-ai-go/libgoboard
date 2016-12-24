@@ -1,0 +1,13 @@
+syntax = "proto3";
+package gocnn;
+
+message RequestV1 {
+	int32 board_size = 1;
+	repeated bool our_group_lib1 = 2; // [true, false] * boardsize^2
+	repeated bool our_group_lib2 = 3;
+	repeated bool our_group_lib3_plus = 4;
+	repeated bool oppo_group_lib1 = 5;
+	repeated bool oppo_group_lib2 = 6;
+	repeated bool oppo_group_lib3_plus = 7;
+    repeated bool is_simple_ko = 8;
+}
