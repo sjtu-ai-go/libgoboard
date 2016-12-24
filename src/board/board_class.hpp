@@ -564,7 +564,7 @@ namespace board
                 (getPointGroup(p.left_point()) != getPointGroup(p.down_point())))
             --liberty;
 
-        if ((p.right_up_point().x >= 1 W && p.right_up_point().y <= H) &&
+        if ((p.right_up_point().x >= 1 && p.right_up_point().y <= H) &&
                 (getPointState(p.right_up_point()) == PointState::NA) &&
                 (getPointState(p.right_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
                 (getPointState(p.up_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
