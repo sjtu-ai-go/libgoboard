@@ -37,7 +37,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 # libgoboard
 ##################################
 include_directories(src/)
-set(libgoboard_SRC src/board.cpp ${PROTO_SRCS})
+set(libgoboard_SRC src/board.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 add_library(goboard STATIC ${libgoboard_SRC})
 target_link_libraries(goboard ${libgo_LIBS} ${PROTOBUF_LIBRARIES})
 set(libgoboard_INCLUDE_DIR ${libgoboard_SOURCE_DIR}/src ${libgo-common_INCLUDE_DIR} ${libgoboard_SOURCE_DIR}/vendor/CompressedGrid ${Protobuf_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR} PARENT_SCOPE)
