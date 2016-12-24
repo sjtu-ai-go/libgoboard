@@ -550,28 +550,32 @@ namespace board
                 liberty += (*iter)->getLiberty() - 2;
         }
 
-        if ((getPointState(p.left_up_point()) == PointState::NA) &&
+        if ((p.left_up_point().x >= 1 && p.left_up_point().y >= 1) &&
+                (getPointState(p.left_up_point()) == PointState::NA) &&
                 (getPointState(p.left_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
                 (getPointState(p.up_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
                 (getPointGroup(p.left_point()) != getPointGroup(p.up_point())))
             --liberty;
 
-        if ((getPointState(p.left_down_point()) == PointState::NA) &&
-            (getPointState(p.left_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
-            (getPointState(p.down_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
-            (getPointGroup(p.left_point()) != getPointGroup(p.down_point())))
+        if ((p.left_down_point().x <= W && p.left_down_point().y >= 1) &&
+                (getPointState(p.left_down_point()) == PointState::NA) &&
+                (getPointState(p.left_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
+                (getPointState(p.down_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
+                (getPointGroup(p.left_point()) != getPointGroup(p.down_point())))
             --liberty;
 
-        if ((getPointState(p.right_up_point()) == PointState::NA) &&
-            (getPointState(p.right_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
-            (getPointState(p.up_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
-            (getPointGroup(p.right_point()) != getPointGroup(p.up_point())))
+        if ((p.right_up_point().x >= 1 W && p.right_up_point().y <= H) &&
+                (getPointState(p.right_up_point()) == PointState::NA) &&
+                (getPointState(p.right_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
+                (getPointState(p.up_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
+                (getPointGroup(p.right_point()) != getPointGroup(p.up_point())))
             --liberty;
 
-        if ((getPointState(p.right_down_point()) == PointState::NA) &&
-            (getPointState(p.right_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
-            (getPointState(p.down_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
-            (getPointGroup(p.right_point()) != getPointGroup(p.down_point())))
+        if ((p.right_down_point().x <= W && p.right_down_point().y <= H) &&
+                (getPointState(p.right_down_point()) == PointState::NA) &&
+                (getPointState(p.right_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
+                (getPointState(p.down_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
+                (getPointGroup(p.right_point()) != getPointGroup(p.down_point())))
             --liberty;
 
         if (liberty >= 2)
