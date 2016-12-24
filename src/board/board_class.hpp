@@ -51,7 +51,7 @@ namespace board
         std::shared_ptr<spdlog::logger> logger = getGlobalLogger();
         BoardGrid<W, H> boardGrid_;
         std::list< GroupNode<W, H> > groupNodeList_;
-        PosGroup<W, H> posGroup_;
+        PosGroup<W, H> posGroup_ = {groupNodeList_.end()};
         std::size_t step_ = 0;
         std::size_t lastStateHash_ = INIT_LASTSTATEHASH; // The hash of board 1 steps before. Used to validate ko.
         std::size_t curStateHash_ = INIT_CURSTATEHASH; // Hash of current board
@@ -67,9 +67,9 @@ namespace board
         static const std::size_t w = W;
         static const std::size_t h = H;
     private:
-        PointType lastMovePoint;
-        PointType koPoint; // -1, -1 if none
-        Player koPlayer;
+        PointType lastMovePoint = {0, 0};
+        PointType koPoint = {-1, -1}; // -1, -1 if none
+        Player koPlayer = Player::B;
 
         std::vector< std::pair<GroupConstIterator, GroupIterator> >
         getMapFromOldItToNewIt(GroupListType &newList,
@@ -90,7 +90,7 @@ namespace board
         };
     public:
 
-        Board(): posGroup_(groupNodeList_.end()), lastMovePoint(0, 0), koPoint(-1, -1)
+        Board()
         {
         }
 
