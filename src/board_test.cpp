@@ -404,6 +404,31 @@ TEST(BoardTest, TestBoardClassLegalMove1)
 
 }
 
+TEST(BoardTest, TestBoardClassGroupStone) {
+    using namespace board;
+    auto logger = getGlobalLogger();
+    logger->set_level(spdlog::level::debug);
+
+    Board<5, 5> b;
+    using BT = Board<5, 5>;
+    using PT = typename BT::PointType;
+    GraphItem graph[5][5] = {
+            {O,   1_b,  2_w,  3_w,  O},
+            {O,   4_b,  5_w,  O,    6_w},
+            {7_b, 8_b,  9_b,  10_w, 11_w},
+            {O,   12_b, O,    13_b, 14_b},
+            {O,   O,    15_b, 16_w, O}
+    };
+    auto points = graphToPoint<5, 5>(graph);
+    std::for_each(points.begin(), points.end(), [&](std::pair<board::GridPoint<5, 5>, board::Player> item) {
+        b.place(item.first, item.second);
+        //std::cerr << b << std::endl;
+    });
+    EXPECT_EQ(2, b.getPointGroup(PT(3, 4))->getStoneCnt());
+    EXPECT_EQ(6, b.getPointGroup(PT(2, 1))->getStoneCnt());
+    EXPECT_EQ(3, b.getPointGroup(PT (2, 4))->getStoneCnt());
+}
+
 TEST(BoardTest, TestBoardEyes)
 {
     using namespace board;

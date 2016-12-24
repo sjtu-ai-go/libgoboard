@@ -587,10 +587,9 @@ namespace board
     template<std::size_t W, std::size_t H>
     auto Board<W, H>::getAllGoodPosition(Player player) -> std::vector<PointType>
     {
-        // TODO: Judge isSelfAtari
         auto validPos = getAllValidPosition(player);
         validPos.erase(std::remove_if(validPos.begin(), validPos.end(), [&](PointType p) {
-            return isTrueEye(p, player);
+            return isTrueEye(p, player) || isSelfAtari(p, player);
         }), validPos.end());
         return validPos;
     }
