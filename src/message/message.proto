@@ -2,12 +2,46 @@ syntax = "proto3";
 package gocnn;
 
 message RequestV1 {
-	int32 board_size = 1;
-	repeated bool our_group_lib1 = 2; // [true, false] * boardsize^2
-	repeated bool our_group_lib2 = 3;
-	repeated bool our_group_lib3_plus = 4;
-	repeated bool oppo_group_lib1 = 5;
-	repeated bool oppo_group_lib2 = 6;
-	repeated bool oppo_group_lib3_plus = 7;
-    repeated bool is_simple_ko = 8;
+    int32 board_size = 1;
+    repeated bool stone_color_our = 2;
+    repeated bool stone_color_oppo = 3;
+    repeated bool stone_color_empty = 4;
+    repeated bool turns_since_one = 5;
+    repeated bool turns_since_two = 6;
+    repeated bool turns_since_three = 7;
+    repeated bool turns_since_more = 8;
+    repeated bool liberties_our_one = 9;
+    repeated bool liberties_our_two = 10;
+    repeated bool liberties_our_three = 11;
+    repeated bool liberties_our_more = 12;
+    repeated bool liberties_oppo_one = 13;
+    repeated bool liberties_oppo_two = 14;
+    repeated bool liberties_oppo_three = 15;
+    repeated bool liberties_oppo_more = 16;
+    repeated bool liberties_after_oppo_one = 17;
+    repeated bool liberties_after_oppo_two = 18;
+    repeated bool liberties_after_oppo_three = 19;
+    repeated bool liberties_after_oppo_more = 20;
+    repeated bool capture_size_one = 21;
+    repeated bool capture_size_two = 22;
+    repeated bool capture_size_three = 23;
+    repeated bool capture_size_four = 24;
+    repeated bool capture_size_five = 25;
+    repeated bool capture_size_six = 26;
+    repeated bool capture_size_seven = 27;
+    repeated bool capture_size_more = 28;
+    repeated bool sensibleness = 29;
+    repeated bool ko = 30;
+    repeated bool border = 31;
+    repeated float position = 32;
+}
+
+message ResponseV1 {
+    int32 board_size = 1;
+    repeated float possibility = 2;
+}
+
+message ResponseV2 {
+    int32 board_size = 1;
+    repeated float possibility = 2;
 }
