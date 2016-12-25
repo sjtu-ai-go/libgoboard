@@ -46,10 +46,18 @@ message RequestV2 {
     repeated bool capture_size_six = 26;
     repeated bool capture_size_seven = 27;
     repeated bool capture_size_more = 28;
-    repeated bool sensibleness = 29;
-    repeated bool ko = 30;
-    repeated bool border = 31;
-    repeated float position = 32;
+    repeated bool self_atari_one = 29;
+    repeated bool self_atari_two = 30;
+    repeated bool self_atari_three = 31;
+    repeated bool self_atari_four = 32;
+    repeated bool self_atari_five = 33;
+    repeated bool self_atari_six = 34;
+    repeated bool self_atari_seven = 35;
+    repeated bool self_atari_more = 36;
+    repeated bool sensibleness = 37;
+    repeated bool ko = 38;
+    repeated bool border = 39;
+    repeated float position = 40;
 }
 
 message ResponseV2 {
