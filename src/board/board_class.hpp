@@ -48,10 +48,12 @@ namespace board
 
         static const std::size_t INIT_LASTSTATEHASH = 0x24512211u,
             INIT_CURSTATEHASH = 0xc7151360u;
+        static const std::size_t MAX_HISTORY_LENGTH = 7;
         std::shared_ptr<spdlog::logger> logger = getGlobalLogger();
         BoardGrid<W, H> boardGrid_;
         std::list< GroupNode<W, H> > groupNodeList_;
         PosGroup<W, H> posGroup_ = {groupNodeList_.end()};
+        std::queue<PointType> placeHistory_;
         std::size_t step_ = 0;
         std::size_t lastStateHash_ = INIT_LASTSTATEHASH; // The hash of board 1 steps before. Used to validate ko.
         std::size_t curStateHash_ = INIT_CURSTATEHASH; // Hash of current board
@@ -98,6 +100,7 @@ namespace board
                 boardGrid_(other.boardGrid_),
                 groupNodeList_(other.groupNodeList_),
                 posGroup_(other.posGroup_, getMapFromOldItToNewIt(groupNodeList_, other.groupNodeList_)),
+                placeHistory_(other.placeHistory_),
                 lastStateHash_(other.lastStateHash_),
                 curStateHash_(other.curStateHash_),
                 step_(other.step_),
@@ -113,7 +116,8 @@ namespace board
                 boardGrid_ = other.boardGrid_;
                 groupNodeList_ = other.groupNodeList_;
                 posGroup_ = decltype(posGroup_)
-                            (other.posGroup_, getMapFromOldItToNewIt(groupNodeList_, other.groupNodeList_)),
+                            (other.posGroup_, getMapFromOldItToNewIt(groupNodeList_, other.groupNodeList_));
+                placeHistory_ = other.placeHistory_;
                 lastStateHash_ = other.lastStateHash_;
                 curStateHash_ = other.curStateHash_;
                 step_ = other.step_;
@@ -127,6 +131,10 @@ namespace board
         {
             groupNodeList_.clear();
             posGroup_.fill(groupNodeList_.end());
+
+            std::queue<PointType> empty;
+            std::swap(placeHistory_, empty);
+
             boardGrid_.clear();
             lastStateHash_ = INIT_LASTSTATEHASH;
             curStateHash_ = INIT_CURSTATEHASH;
@@ -143,6 +151,10 @@ namespace board
         GroupConstIterator getPointGroup(PointType p) const
         {
             return posGroup_.get(p);
+        }
+        // Return a copy of placeHistory_
+        std::queue<PointType> getHistoryCopy() const {
+            return placeHistory_;
         }
         std::size_t getStep() const
         {
@@ -204,6 +216,7 @@ namespace board
         friend std::ostream& operator<< <>(std::ostream&, const Board&);
 
         gocnn::RequestV1 generateRequestV1(Player player);
+        gocnn::RequestV2 generateRequestV2(Player player);
 
     private:
         // Internal use only
@@ -403,6 +416,9 @@ namespace board
         curStateHash_ = hash_v;
         lastMovePoint = p;
         ++step_;
+        if (placeHistory_.size() >= MAX_HISTORY_LENGTH)
+            placeHistory_.pop();
+        placeHistory_.push(p);
     }
 
     template<std::size_t W, std::size_t H>
@@ -525,12 +541,13 @@ namespace board
         p.for_each_adjacent([&](PointType adjP) {
             if (getPointState(adjP) == getPointStateFromPlayer(getOpponentPlayer(player)))
             {
-                if (getPointGroup(adjP)->getLiberty() <= 1)
+                GroupConstIterator adjGroup = *getPointGroup(adjP);
+                if (adjGroup.getLiberty() <= 1)
                     captureOpponent = true;
                 --liberty;
             }
             else if (getPointState(adjP) == getPointStateFromPlayer(player))
-                groupList.push_back(getPointGroup(adjP));
+                groupList.push_back(&adjGroup);
         });
 
         if (captureOpponent)
@@ -681,6 +698,229 @@ namespace board
             }
         });
         return reqv1;
+    }
+
+    template<std::size_t W, std::size_t H>
+    auto Board<W, H>::generateRequestV2(Player player) -> gcnn::RequestV2
+    {
+        gocnn::RequestV2 reqv2;
+        reqv2.set_board_size(W * H);
+        reqv2.mutable_stone_color_our()->Reserve(reqv2.board_size());
+        reqv2.mutable_stone_color_oppo()->Reserve(reqv2.board_size());
+        reqv2.mutable_stone_color_empty()->Reserve(reqv2.board_size());
+        reqv2.mutable_turns_since_one()->Reserve(reqv2.board_size());
+        reqv2.mutable_turns_since_two()->Reserve(reqv2.board_size());
+        reqv2.mutable_turns_since_three()->Reserve(reqv2.board_size());
+        reqv2.mutable_turns_since_four()->Reserve(reqv2.board_size());
+        reqv2.mutable_turns_since_five()->Reserve(reqv2.board_size());
+        reqv2.mutable_turns_since_six()->Reserve(reqv2.board_size());
+        reqv2.mutable_turns_since_seven()->Reserve(reqv2.board_size());
+        reqv2.mutable_turns_since_more()->Reserve(reqv2.board_size());
+        reqv2.mutable_liberties_our_one()->Reserve(reqv2.board_size());
+        reqv2.mutable_liberties_our_two()->Reserve(reqv2.board_size());
+        reqv2.mutable_liberties_our_three()->Reserve(reqv2.board_size());
+        reqv2.mutable_liberties_our_more()->Reserve(reqv2.board_size());
+        reqv2.mutable_liberties_oppo_one()->Reserve(reqv2.board_size());
+        reqv2.mutable_liberties_oppo_two()->Reserve(reqv2.board_size());
+        reqv2.mutable_liberties_oppo_three()->Reserve(reqv2.board_size());
+        reqv2.mutable_liberties_oppo_more()->Reserve(reqv2.board_size());
+        reqv2.mutable_capture_size_one()->Reserve(reqv2.board_size());
+        reqv2.mutable_capture_size_two()->Reserve(reqv2.board_size());
+        reqv2.mutable_capture_size_three()->Reserve(reqv2.board_size());
+        reqv2.mutable_capture_size_four()->Reserve(reqv2.board_size());
+        reqv2.mutable_capture_size_five()->Reserve(reqv2.board_size());
+        reqv2.mutable_capture_size_six()->Reserve(reqv2.board_size());
+        reqv2.mutable_capture_size_seven()->Reserve(reqv2.board_size());
+        reqv2.mutable_capture_size_more()->Reserve(reqv2.board_size());
+        reqv2.mutable_sensibleness()->Reserve(reqv2.board_size());
+        reqv2.mutable_ko()->Reserve(reqv2.board_size());
+        reqv2.mutable_border()->Reserve(reqv2.board_size());
+        reqv2.mutable_position()->Reserve(reqv2.board_size());
+
+        std::queue<PointType> placeHistory = getHistoryCopy();
+        PointType lastOnePlace(0, 0);
+        PointType lastTwoPlace(0, 0);
+        PointType lastThreePlace(0, 0);
+        PointType lastFourPlace(0, 0);
+        PointType lastFivePlace(0, 0);
+        PointType lastSixPlace(0, 0);
+        PointType lastSevenPlace(0, 0);
+        switch (placeHistory.size())
+        {
+            case 0:
+                break;
+            case 1:
+                lastOnePlace = placeHistory.pop();
+                break;
+            case 2:
+                lastTwoPlace = placeHistory.pop();
+                lastOnePlace = placeHistory.pop();
+                break;
+            case 3:
+                lastThreePlace = placeHistory.pop();
+                lastTwoPlace = placeHistory.pop();
+                lastOnePlace = placeHistory.pop();
+                break;
+            case 4:
+                lastFourPlace = placeHistory.pop();
+                lastThreePlace = placeHistory.pop();
+                lastTwoPlace = placeHistory.pop();
+                lastOnePlace = placeHistory.pop();
+                break;
+            case 5:
+                lastFivePlace = placeHistory.pop();
+                lastFourPlace = placeHistory.pop();
+                lastThreePlace = placeHistory.pop();
+                lastTwoPlace = placeHistory.pop();
+                lastOnePlace = placeHistory.pop();
+                break;
+            case 6:
+                lastSixPlace = placeHistory.pop();
+                lastFivePlace = placeHistory.pop();
+                lastFourPlace = placeHistory.pop();
+                lastThreePlace = placeHistory.pop();
+                lastTwoPlace = placeHistory.pop();
+                lastOnePlace = placeHistory.pop();
+                break;
+            case 7:
+                lastSevenPlace = placeHistory.pop();
+                lastSixPlace = placeHistory.pop();
+                lastFivePlace = placeHistory.pop();
+                lastFourPlace = placeHistory.pop();
+                lastThreePlace = placeHistory.pop();
+                lastTwoPlace = placeHistory.pop();
+                lastOnePlace = placeHistory.pop();
+                break;
+            default:
+                break;
+        }
+        PointType::for_all([&](PointType p) {
+            bool isEmpty = (getPointState(p) == PointState::NA);
+            bool isOurs = (getPointState(p) == getPointStateFromPlayer(player));
+            auto group = *getPointGroup(p);
+            std::size_t liberty = 0;
+            std::size_t stoneCount = 0;
+            if (!isEmpty)
+            {
+                liberty = group.getLiberty();
+                stoneCount = group.getStoneCnt();
+            }
+
+            if (isEmpty)
+            {
+                reqv2.add_stone_color_our(false);
+                reqv2.add_stone_color_oppo(false);
+                reqv2.add_stone_color_empty(true);
+
+                reqv2.add_liberties_our_one(false);
+                reqv2.add_liberties_our_two(false);
+                reqv2.add_liberties_our_three(false);
+                reqv2.add_liberties_our_more(false);
+
+                reqv2.add_liberties_oppo_one(false);
+                reqv2.add_liberties_oppo_two(false);
+                reqv2.add_liberties_oppo_three(false);
+                reqv2.add_liberties_oppo_more(false);
+            } else if (isOurs)
+            {
+                reqv2.add_stone_color_our(true);
+                reqv2.add_stone_color_oppo(false);
+                reqv2.add_stone_color_empty(false);
+
+                reqv2.add_liberties_our_one(liberty == 1);
+                reqv2.add_liberties_our_two(liberty == 2);
+                reqv2.add_liberties_our_three(liberty == 3);
+                reqv2.add_liberties_our_more(liberty >= 4);
+
+                reqv2.add_liberties_oppo_one(false);
+                reqv2.add_liberties_oppo_two(false);
+                reqv2.add_liberties_oppo_three(false);
+                reqv2.add_liberties_oppo_more(false);
+
+                if (liberty == 1)
+                {
+                    reqv2.add_self_atari_one(stoneCount == 1);
+                    reqv2.add_self_atari_two(stoneCount == 2);
+                    reqv2.add_self_atari_three(stoneCount == 3);
+                    reqv2.add_self_atari_four(stoneCount == 4);
+                    reqv2.add_self_atari_five(stoneCount == 5);
+                    reqv2.add_self_atari_six(stoneCount == 6);
+                    reqv2.add_self_atari_seven(stoneCount == 7);
+                    reqv2.add_self_atari_more(stoneCount >= 8);
+                }
+
+                reqv2.add_capture_size_one(false);
+                reqv2.add_capture_size_two(false);
+                reqv2.add_capture_size_three(false);
+                reqv2.add_capture_size_four(false);
+                reqv2.add_capture_size_five(false);
+                reqv2.add_capture_size_six(false);
+                reqv2.add_capture_size_seven(false);
+                reqv2.add_capture_size_more(false);
+            } else
+            {
+                reqv2.add_stone_color_our(false);
+                reqv2.add_stone_color_oppo(true);
+                reqv2.add_stone_color_empty(false);
+
+                reqv2.add_liberties_our_one(false);
+                reqv2.add_liberties_our_two(false);
+                reqv2.add_liberties_our_three(false);
+                reqv2.add_liberties_our_more(false);
+
+                reqv2.add_liberties_oppo_one(liberty == 1);
+                reqv2.add_liberties_oppo_two(liberty == 2);
+                reqv2.add_liberties_oppo_three(liberty == 3);
+                reqv2.add_liberties_oppo_more(liberty >= 4);
+
+                reqv2.add_self_atari_one(false);
+                reqv2.add_self_atari_two(false);
+                reqv2.add_self_atari_three(false);
+                reqv2.add_self_atari_four(false);
+                reqv2.add_self_atari_five(false);
+                reqv2.add_self_atari_six(false);
+                reqv2.add_self_atari_seven(false);
+                reqv2.add_self_atari_more(false);
+
+                if (liberty == 1)
+                {
+                    reqv2.add_capture_size_one(stoneCount == 1);
+                    reqv2.add_capture_size_two(stoneCount == 2);
+                    reqv2.add_capture_size_three(stoneCount == 3);
+                    reqv2.add_capture_size_four(stoneCount == 4);
+                    reqv2.add_capture_size_five(stoneCount == 5);
+                    reqv2.add_capture_size_six(stoneCount == 6);
+                    reqv2.add_capture_size_seven(stoneCount == 7);
+                    reqv2.add_capture_size_more(stoneCount >= 8);
+                }
+            }
+
+            reqv2.add_turns_since_one(p == lastOnePlace);
+            reqv2.add_turns_since_two(p == lastTwoPlace);
+            reqv2.add_turns_since_three(p == lastThreePlace);
+            reqv2.add_turns_since_four(p == lastFourPlace);
+            reqv2.add_turns_since_five(p == lastFivePlace);
+            reqv2.add_turns_since_six(p == lastSixPlace);
+            reqv2.add_turns_since_seven(p == lastSevenPlace);
+            if (!isEmpty && !(p == lastOnePlace ||
+                    p == lastTwoPlace ||
+                    p == lastThreePlace ||
+                    p == lastFourPlace ||
+                    p == lastFivePlace ||
+                    p == lastSixPlace ||
+                    p == lastSevenPlace))
+                reqv2.add_turns_since_more();
+
+            reqv2.add_sensibleness(isTrueEye(p));
+
+            reqv2.add_ko(koPlayer == player && koPoint == p);
+
+            reqv2.add_border(p.is_left() || p.is_top() || p.is_right() || p.is_bottom());
+
+            reqv2.add_position(exp(-0.5 * (pow(p.x - W / 2.0, 2) + pow(p.y - H / 2.0, 2))));
+        });
+
+        return reqv2;
     }
 }
 
