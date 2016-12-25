@@ -1,15 +1,20 @@
 syntax = "proto3";
-package gocnn
+package gocnn;
 
 message RequestV1 {
     int32 board_size = 1;
-    repeated bool our_group_lib1 = 2; // [true, false] * boardsize^2
+    repeated bool our_group_lib1 = 2;
     repeated bool our_group_lib2 = 3;
     repeated bool our_group_lib3_plus = 4;
     repeated bool oppo_group_lib1 = 5;
     repeated bool oppo_group_lib2 = 6;
     repeated bool oppo_group_lib3_plus = 7;
     repeated bool is_simple_ko = 8;
+}
+
+message ResponseV1 {
+    int32 board_size = 1;
+    repeated float possibility = 2;
 }
 
 message RequestV2 {
@@ -45,11 +50,6 @@ message RequestV2 {
     repeated bool ko = 30;
     repeated bool border = 31;
     repeated float position = 32;
-}
-
-message ResponseV1 {
-    int32 board_size = 1;
-    repeated float possibility = 2;
 }
 
 message ResponseV2 {
