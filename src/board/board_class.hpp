@@ -397,7 +397,7 @@ namespace board
             koPlayer = opponent;
         }
         else
-            koPoint = PointType(-1, -1);
+            koPoint = PointType(0, 0);
 
         // --- remove our dead groups
         if (thisGroup->getLiberty() == 0) {
