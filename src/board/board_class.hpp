@@ -53,7 +53,6 @@ namespace board
         BoardGrid<W, H> boardGrid_;
         std::list< GroupNode<W, H> > groupNodeList_;
         PosGroup<W, H> posGroup_ = {groupNodeList_.end()};
-        std::queue<PointType> placeHistory_;
         std::size_t step_ = 0;
         std::size_t lastStateHash_ = INIT_LASTSTATEHASH; // The hash of board 1 steps before. Used to validate ko.
         std::size_t curStateHash_ = INIT_CURSTATEHASH; // Hash of current board
@@ -69,6 +68,7 @@ namespace board
         static const std::size_t w = W;
         static const std::size_t h = H;
     private:
+        std::queue<PointType> placeHistory_;
         PointType lastMovePoint = {0, 0};
         PointType koPoint = {-1, -1}; // -1, -1 if none
         Player koPlayer = Player::B;
@@ -539,15 +539,15 @@ namespace board
         bool captureOpponent = false;
 
         p.for_each_adjacent([&](PointType adjP) {
+            GroupConstIterator adjGroup = getPointGroup(adjP);
             if (getPointState(adjP) == getPointStateFromPlayer(getOpponentPlayer(player)))
             {
-                GroupConstIterator adjGroup = *getPointGroup(adjP);
-                if (adjGroup.getLiberty() <= 1)
+                if (adjGroup->getLiberty() <= 1)
                     captureOpponent = true;
                 --liberty;
             }
             else if (getPointState(adjP) == getPointStateFromPlayer(player))
-                groupList.push_back(&adjGroup);
+                groupList.push_back(adjGroup);
         });
 
         if (captureOpponent)
@@ -701,7 +701,7 @@ namespace board
     }
 
     template<std::size_t W, std::size_t H>
-    auto Board<W, H>::generateRequestV2(Player player) -> gcnn::RequestV2
+    auto Board<W, H>::generateRequestV2(Player player) -> gocnn::RequestV2
     {
         gocnn::RequestV2 reqv2;
         reqv2.set_board_size(W * H);
@@ -750,46 +750,74 @@ namespace board
             case 0:
                 break;
             case 1:
-                lastOnePlace = placeHistory.pop();
+                lastOnePlace = placeHistory.front();
+                placeHistory.pop();
                 break;
             case 2:
-                lastTwoPlace = placeHistory.pop();
-                lastOnePlace = placeHistory.pop();
+                lastTwoPlace = placeHistory.front();
+                placeHistory.pop();
+                lastOnePlace = placeHistory.front();
+                placeHistory.pop();
                 break;
             case 3:
-                lastThreePlace = placeHistory.pop();
-                lastTwoPlace = placeHistory.pop();
-                lastOnePlace = placeHistory.pop();
+                lastThreePlace = placeHistory.front();
+                placeHistory.pop();
+                lastTwoPlace = placeHistory.front();
+                placeHistory.pop();
+                lastOnePlace = placeHistory.front();
+                placeHistory.pop();
                 break;
             case 4:
-                lastFourPlace = placeHistory.pop();
-                lastThreePlace = placeHistory.pop();
-                lastTwoPlace = placeHistory.pop();
-                lastOnePlace = placeHistory.pop();
+                lastFourPlace = placeHistory.front();
+                placeHistory.pop();
+                lastThreePlace = placeHistory.front();
+                placeHistory.pop();
+                lastTwoPlace = placeHistory.front();
+                placeHistory.pop();
+                lastOnePlace = placeHistory.front();
+                placeHistory.pop();
                 break;
             case 5:
-                lastFivePlace = placeHistory.pop();
-                lastFourPlace = placeHistory.pop();
-                lastThreePlace = placeHistory.pop();
-                lastTwoPlace = placeHistory.pop();
-                lastOnePlace = placeHistory.pop();
+                lastFivePlace = placeHistory.front();
+                placeHistory.pop();
+                lastFourPlace = placeHistory.front();
+                placeHistory.pop();
+                lastThreePlace = placeHistory.front();
+                placeHistory.pop();
+                lastTwoPlace = placeHistory.front();
+                placeHistory.pop();
+                lastOnePlace = placeHistory.front();
+                placeHistory.pop();
                 break;
             case 6:
-                lastSixPlace = placeHistory.pop();
-                lastFivePlace = placeHistory.pop();
-                lastFourPlace = placeHistory.pop();
-                lastThreePlace = placeHistory.pop();
-                lastTwoPlace = placeHistory.pop();
-                lastOnePlace = placeHistory.pop();
+                lastSixPlace = placeHistory.front();
+                placeHistory.pop();
+                lastFivePlace = placeHistory.front();
+                placeHistory.pop();
+                lastFourPlace = placeHistory.front();
+                placeHistory.pop();
+                lastThreePlace = placeHistory.front();
+                placeHistory.pop();
+                lastTwoPlace = placeHistory.front();
+                placeHistory.pop();
+                lastOnePlace = placeHistory.front();
+                placeHistory.pop();
                 break;
             case 7:
-                lastSevenPlace = placeHistory.pop();
-                lastSixPlace = placeHistory.pop();
-                lastFivePlace = placeHistory.pop();
-                lastFourPlace = placeHistory.pop();
-                lastThreePlace = placeHistory.pop();
-                lastTwoPlace = placeHistory.pop();
-                lastOnePlace = placeHistory.pop();
+                lastSevenPlace = placeHistory.front();
+                placeHistory.pop();
+                lastSixPlace = placeHistory.front();
+                placeHistory.pop();
+                lastFivePlace = placeHistory.front();
+                placeHistory.pop();
+                lastFourPlace = placeHistory.front();
+                placeHistory.pop();
+                lastThreePlace = placeHistory.front();
+                placeHistory.pop();
+                lastTwoPlace = placeHistory.front();
+                placeHistory.pop();
+                lastOnePlace = placeHistory.front();
+                placeHistory.pop();
                 break;
             default:
                 break;
@@ -909,9 +937,11 @@ namespace board
                     p == lastFivePlace ||
                     p == lastSixPlace ||
                     p == lastSevenPlace))
-                reqv2.add_turns_since_more();
+                reqv2.add_turns_since_more(true);
+            else
+                reqv2.add_turns_since_more(false);
 
-            reqv2.add_sensibleness(isTrueEye(p));
+            reqv2.add_sensibleness(isTrueEye(p, player));
 
             reqv2.add_ko(koPlayer == player && koPoint == p);
 
