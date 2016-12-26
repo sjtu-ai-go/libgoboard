@@ -105,7 +105,8 @@ namespace board
                 curStateHash_(other.curStateHash_),
                 step_(other.step_),
                 lastMovePoint(other.lastMovePoint),
-                koPoint(other.koPoint)
+                koPoint(other.koPoint),
+                koPlayer(other.koPlayer)
         {
         }
 
@@ -123,6 +124,7 @@ namespace board
                 step_ = other.step_;
                 lastMovePoint = other.lastMovePoint;
                 koPoint = other.koPoint;
+                koPlayer = other.koPlayer;
             }
             return *this;
         }
