@@ -70,7 +70,7 @@ namespace board
     private:
         std::queue<PointType> placeHistory_;
         PointType lastMovePoint = {0, 0};
-        PointType koPoint = {-1, -1}; // -1, -1 if none
+        PointType koPoint = {0, 0}; // 0, 0 if none
         Player koPlayer = Player::B;
 
         std::vector< std::pair<GroupConstIterator, GroupIterator> >
