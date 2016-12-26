@@ -70,7 +70,7 @@ namespace board
     private:
         std::queue<PointType> placeHistory_;
         PointType lastMovePoint = {0, 0};
-        PointType koPoint = {0, 0}; // 0, 0 if none
+        PointType koPoint = {-1, -1}; // -1, -1 if none
         Player koPlayer = Player::B;
 
         std::vector< std::pair<GroupConstIterator, GroupIterator> >
@@ -397,7 +397,7 @@ namespace board
             koPlayer = opponent;
         }
         else
-            koPoint = PointType(0, 0);
+            koPoint = PointType(-1, -1);
 
         // --- remove our dead groups
         if (thisGroup->getLiberty() == 0) {
@@ -740,13 +740,13 @@ namespace board
         reqv2.mutable_position()->Reserve(reqv2.board_size());
 
         std::queue<PointType> placeHistory = getHistoryCopy();
-        PointType lastOnePlace(0, 0);
-        PointType lastTwoPlace(0, 0);
-        PointType lastThreePlace(0, 0);
-        PointType lastFourPlace(0, 0);
-        PointType lastFivePlace(0, 0);
-        PointType lastSixPlace(0, 0);
-        PointType lastSevenPlace(0, 0);
+        PointType lastOnePlace(-1, -1);
+        PointType lastTwoPlace(-1, -1);
+        PointType lastThreePlace(-1, -1);
+        PointType lastFourPlace(-1, -1);
+        PointType lastFivePlace(-1, -1);
+        PointType lastSixPlace(-1, -1);
+        PointType lastSevenPlace(-1, -1);
         switch (placeHistory.size())
         {
             case 0:
