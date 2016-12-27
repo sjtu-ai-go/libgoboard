@@ -535,6 +535,11 @@ namespace board
 
         int liberty = 4;
 
+        if (p.x == 1 || p.x == W)
+            --liberty;
+        if (p.y == 1 || p.y == H)
+            --liberty;
+
         std::vector<GroupConstIterator> groupList;
         groupList.reserve(4);
 
