@@ -851,6 +851,24 @@ namespace board
                 reqv2.add_liberties_oppo_two(false);
                 reqv2.add_liberties_oppo_three(false);
                 reqv2.add_liberties_oppo_more(false);
+
+                reqv2.add_self_atari_one(false);
+                reqv2.add_self_atari_two(false);
+                reqv2.add_self_atari_three(false);
+                reqv2.add_self_atari_four(false);
+                reqv2.add_self_atari_five(false);
+                reqv2.add_self_atari_six(false);
+                reqv2.add_self_atari_seven(false);
+                reqv2.add_self_atari_more(false);
+
+                reqv2.add_capture_size_one(false);
+                reqv2.add_capture_size_two(false);
+                reqv2.add_capture_size_three(false);
+                reqv2.add_capture_size_four(false);
+                reqv2.add_capture_size_five(false);
+                reqv2.add_capture_size_six(false);
+                reqv2.add_capture_size_seven(false);
+                reqv2.add_capture_size_more(false);
             } else if (isOurs)
             {
                 reqv2.add_stone_color_our(true);
@@ -878,6 +896,17 @@ namespace board
                     reqv2.add_self_atari_seven(stoneCount == 7);
                     reqv2.add_self_atari_more(stoneCount >= 8);
                 }
+                else
+                {
+                    reqv2.add_self_atari_one(false);
+                    reqv2.add_self_atari_two(false);
+                    reqv2.add_self_atari_three(false);
+                    reqv2.add_self_atari_four(false);
+                    reqv2.add_self_atari_five(false);
+                    reqv2.add_self_atari_six(false);
+                    reqv2.add_self_atari_seven(false);
+                    reqv2.add_self_atari_more(false);
+                }
 
                 reqv2.add_capture_size_one(false);
                 reqv2.add_capture_size_two(false);
@@ -887,7 +916,8 @@ namespace board
                 reqv2.add_capture_size_six(false);
                 reqv2.add_capture_size_seven(false);
                 reqv2.add_capture_size_more(false);
-            } else
+            }
+            else
             {
                 reqv2.add_stone_color_our(false);
                 reqv2.add_stone_color_oppo(true);
@@ -922,6 +952,17 @@ namespace board
                     reqv2.add_capture_size_six(stoneCount == 6);
                     reqv2.add_capture_size_seven(stoneCount == 7);
                     reqv2.add_capture_size_more(stoneCount >= 8);
+                }
+                else
+                {
+                    reqv2.add_capture_size_one(false);
+                    reqv2.add_capture_size_two(false);
+                    reqv2.add_capture_size_three(false);
+                    reqv2.add_capture_size_four(false);
+                    reqv2.add_capture_size_five(false);
+                    reqv2.add_capture_size_six(false);
+                    reqv2.add_capture_size_seven(false);
+                    reqv2.add_capture_size_more(false);
                 }
             }
 
