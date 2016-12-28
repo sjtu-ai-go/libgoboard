@@ -21,6 +21,7 @@
 #include <memory>
 #include <map>
 #include <queue>
+#include <algorithm>
 #include <logger.hpp>
 #include <spdlog/fmt/ostr.h>
 #include "message.pb.h"
@@ -164,6 +165,8 @@ namespace board
         }
         // place a piece on the board. State will be changed
         void place(PointType p, Player player);
+
+        double getPointScore(PointType p, Player player);
 
         enum struct PositionStatus
         {
@@ -1016,6 +1019,92 @@ namespace board
         std::fill(reqV2.mutable_turns_since_seven()->begin(), reqV2.mutable_turns_since_seven()->end(), false);
         std::fill(reqV2.mutable_turns_since_more()->begin(), reqV2.mutable_turns_since_more()->end(), true);
         return reqV2;
+    };
+
+    template<std::size_t W, std::size_t H>
+    double Board<W, H>::getPointScore(PointType p, Player player)
+    {
+        double score = 0;
+
+        const double full_score = 100;
+
+        std::size_t step = getStep();
+
+        std::queue<PointType> history = getHistoryCopy();
+        std::size_t historyLength = history.size();
+
+        double default_score = 100;
+        const double default_score_weight = 0.05;
+
+        double border_score = 0;
+        const double border_score_weight = 0.1;
+
+        if (p.is_left() || p.is_top() || p.is_right() || p.is_bottom())
+            border_score = 0;
+        else
+            border_score = 100;
+
+        double position_score = 0;
+        const double position_score_weight = 0.0;
+
+        position_score = 100 * (1 - std::min(std::min(abs(p.x - 3.0), abs(p.x - 15.0)), std::min(abs(p.y - 3.0), abs(p.y - 15.0))) / 7.0);
+
+        double liberty_score = 0;
+        const double liberty_score_weight = 0.2;
+
+        int min_liberty = 361;
+        p.for_each_adjacent([&](PointType adjP) {
+            GroupConstIterator group = getPointGroup(adjP);
+            min_liberty = std::min(min_liberty, (int)group->getLiberty());
+        });
+        if (min_liberty < 361)
+            liberty_score = std::max(6 - min_liberty, 0) * 100 / 5.0;
+
+        double atari_capture_score = 0;
+        const double atari_capture_score_weight = 0.2;
+
+        atari_capture_score = min_liberty == 1 ? 100 : 0;
+
+        double nearby_score = 0;
+        const double nearby_score_weight = 0.2;
+
+        double nearby_base_score = 100;
+        double dis = 0;
+        PointType candidate_center(-1, -1);
+        while (nearby_base_score > 0 && !history.empty())
+        {
+            candidate_center = history.front();
+            history.pop();
+            dis = pow((double)p.x - (double)candidate_center.x, 2) + pow((double)p.y - (double)candidate_center.y, 2);
+            if (dis <= 18)
+            {
+                nearby_score = nearby_base_score * (36 - dis) / 36.0;
+                break;
+            }
+            nearby_base_score -= 25;
+        }
+
+        score = default_score * default_score_weight;
+        score += border_score * border_score_weight;
+        score += position_score * position_score_weight;
+        score += liberty_score * liberty_score_weight;
+        score += atari_capture_score * atari_capture_score_weight;
+        score += nearby_score * nearby_score_weight;
+        if (step <= 30)
+        {
+            score += position_score * (1 - step / 30.0) * 0.25;
+            score += (liberty_score  + atari_capture_score + nearby_score) * (step / 90.0) * 0.25;
+        }
+        else if (step <= 320)
+        {
+            score += (liberty_score  + atari_capture_score + nearby_score) * 0.25 / 3.0;
+        }
+        else
+        {
+            score += (liberty_score  + atari_capture_score) * 0.25 / 2.0;
+        }
+
+        return score;
     };
 }
 
