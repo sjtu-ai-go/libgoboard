@@ -219,6 +219,7 @@ namespace board
 
         gocnn::RequestV1 generateRequestV1(Player player);
         gocnn::RequestV2 generateRequestV2(Player player);
+        gocnn::RequestV2 generateRequestV2Bug(Player player); // Bug workaround version
 
     private:
         // Internal use only
@@ -1000,6 +1001,22 @@ namespace board
 
         return reqv2;
     }
+
+
+    template<std::size_t W, std::size_t H>
+    auto Board<W, H>::generateRequestV2Bug(Player player) -> gocnn::RequestV2
+    {
+        gocnn::RequestV2 reqV2 = generateRequestV2(player);
+        std::fill(reqV2.mutable_turns_since_one()->begin(), reqV2.mutable_turns_since_one()->end(), false);
+        std::fill(reqV2.mutable_turns_since_two()->begin(), reqV2.mutable_turns_since_two()->end(), false);
+        std::fill(reqV2.mutable_turns_since_three()->begin(), reqV2.mutable_turns_since_three()->end(), false);
+        std::fill(reqV2.mutable_turns_since_four()->begin(), reqV2.mutable_turns_since_four()->end(), false);
+        std::fill(reqV2.mutable_turns_since_five()->begin(), reqV2.mutable_turns_since_five()->end(), false);
+        std::fill(reqV2.mutable_turns_since_six()->begin(), reqV2.mutable_turns_since_six()->end(), false);
+        std::fill(reqV2.mutable_turns_since_seven()->begin(), reqV2.mutable_turns_since_seven()->end(), false);
+        std::fill(reqV2.mutable_turns_since_more()->begin(), reqV2.mutable_turns_since_seven()->end(), true);
+        return reqV2;
+    };
 }
 
 namespace std
