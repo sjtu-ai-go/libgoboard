@@ -1014,7 +1014,7 @@ namespace board
         std::fill(reqV2.mutable_turns_since_five()->begin(), reqV2.mutable_turns_since_five()->end(), false);
         std::fill(reqV2.mutable_turns_since_six()->begin(), reqV2.mutable_turns_since_six()->end(), false);
         std::fill(reqV2.mutable_turns_since_seven()->begin(), reqV2.mutable_turns_since_seven()->end(), false);
-        std::fill(reqV2.mutable_turns_since_more()->begin(), reqV2.mutable_turns_since_seven()->end(), true);
+        std::fill(reqV2.mutable_turns_since_more()->begin(), reqV2.mutable_turns_since_more()->end(), true);
         return reqV2;
     };
 }
