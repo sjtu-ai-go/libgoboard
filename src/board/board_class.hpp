@@ -166,7 +166,7 @@ namespace board
         // place a piece on the board. State will be changed
         void place(PointType p, Player player);
 
-        double getPointScore(PointType p, Player player);
+        double getPointScore(PointType p, Player player) const;
 
         enum struct PositionStatus
         {
@@ -177,9 +177,9 @@ namespace board
             SUICIDE // The piece doesn't survive after place
         };
         // Whether it is legal/why it is illegal to place a piece of player at p. State will not be changed.
-        PositionStatus getPosStatus(PointType p, Player player);
+        PositionStatus getPosStatus(PointType p, Player player) const;
         // Find all valid position for player
-        std::vector<PointType> getAllValidPosition(Player player)
+        std::vector<PointType> getAllValidPosition(Player player) const
         {
             std::vector<PointType> ans;
             for (std::size_t i=0; i<W; ++i)
@@ -210,13 +210,13 @@ namespace board
             return groupNodeList_.cend();
         }
 
-        bool isEye(PointType p, Player player);
-        bool isSemiEye(PointType p, Player player);
-        bool isFakeEye(PointType p, Player player);
-        bool isTrueEye(PointType p, Player player);
-        bool isSelfAtari(PointType p, Player player);
+        bool isEye(PointType p, Player player) const;
+        bool isSemiEye(PointType p, Player player) const;
+        bool isFakeEye(PointType p, Player player) const;
+        bool isTrueEye(PointType p, Player player) const;
+        bool isSelfAtari(PointType p, Player player) const;
         PointType getSimpleKoPoint() const; // Returns simple ko point. (-1, -1) when no simple ko
-        std::vector<PointType> getAllGoodPosition(Player player);
+        std::vector<PointType> getAllGoodPosition(Player player) const;
 
         friend std::ostream& operator<< <>(std::ostream&, const Board&);
 
@@ -226,7 +226,7 @@ namespace board
 
     private:
         // Internal use only
-        GroupIterator getPointGroup_(PointType p)
+        GroupIterator getPointGroup_(PointType p) const
         {
             return posGroup_.get(p);
         }
@@ -428,7 +428,7 @@ namespace board
     }
 
     template<std::size_t W, std::size_t H>
-    auto Board<W,H>::getPosStatus(PointType p, Player player) -> typename Board::PositionStatus
+    auto Board<W,H>::getPosStatus(PointType p, Player player) const -> typename Board::PositionStatus
     {
         if (getPointState(p) != PointState::NA)
             return PositionStatus::NOTEMPTY;
@@ -479,7 +479,7 @@ namespace board
     }
 
     template<std::size_t W, std::size_t H>
-    bool Board<W, H>::isEye(PointType p, Player player)
+    bool Board<W, H>::isEye(PointType p, Player player) const
     {
         if (getPointState(p) != PointState::NA)
             return false;
@@ -492,7 +492,7 @@ namespace board
     }
 
     template<std::size_t W, std::size_t H>
-    bool Board<W, H>::isSemiEye(PointType p, Player player)
+    bool Board<W, H>::isSemiEye(PointType p, Player player) const
     {
         if (!isEye(p, player))
             return false;
@@ -512,7 +512,7 @@ namespace board
     }
 
     template<std::size_t W, std::size_t H>
-    bool Board<W, H>::isFakeEye(PointType p, Player player)
+    bool Board<W, H>::isFakeEye(PointType p, Player player) const
     {
         std::size_t oppo_cnt = 0, all_cnt = 0;
         p.for_each_diag([&](PointType adjP) {
@@ -526,13 +526,13 @@ namespace board
     }
 
     template<std::size_t W, std::size_t H>
-    bool Board<W, H>::isTrueEye(PointType p, Player player)
+    bool Board<W, H>::isTrueEye(PointType p, Player player) const
     {
         return isEye(p, player) && !isFakeEye(p, player);
     }
 
     template<std::size_t W, std::size_t H>
-    bool Board<W, H>::isSelfAtari(PointType p, Player player)
+    bool Board<W, H>::isSelfAtari(PointType p, Player player) const
     {
         if (getPointState(p) != PointState::NA)
             return false;
@@ -613,7 +613,7 @@ namespace board
     }
 
     template<std::size_t W, std::size_t H>
-    auto Board<W, H>::getAllGoodPosition(Player player) -> std::vector<PointType>
+    auto Board<W, H>::getAllGoodPosition(Player player) const -> std::vector<PointType>
     {
         auto validPos = getAllValidPosition(player);
         validPos.erase(std::remove_if(validPos.begin(), validPos.end(), [&](PointType p) {
@@ -1022,7 +1022,7 @@ namespace board
     };
 
     template<std::size_t W, std::size_t H>
-    double Board<W, H>::getPointScore(PointType p, Player player)
+    double Board<W, H>::getPointScore(PointType p, Player player) const
     {
         double score = 0;
 
