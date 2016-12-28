@@ -995,7 +995,7 @@ namespace board
 
             reqv2.add_border(p.is_left() || p.is_top() || p.is_right() || p.is_bottom());
 
-            reqv2.add_position(exp(-0.5 * (pow((double)p.x - (double)W / 2.0, 2) + pow((double)p.y - (double)H / 2.0, 2))));
+            reqv2.add_position(exp(-0.5 * (pow((double)p.x - (double)(W - 1) / 2.0, 2) + pow((double)p.y - (double)(H - 1) / 2.0, 2))));
         });
 
         return reqv2;
