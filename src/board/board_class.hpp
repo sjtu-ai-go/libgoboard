@@ -574,28 +574,28 @@ namespace board
                 liberty += (*iter)->getLiberty() - 2;
         }
 
-        if ((p.left_up_point().x >= 1 && p.left_up_point().y >= 1) &&
+        if ((p.left_up_point().x >= 0 && p.left_up_point().y >= 0) &&
                 (getPointState(p.left_up_point()) == PointState::NA) &&
                 (getPointState(p.left_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
                 (getPointState(p.up_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
                 (getPointGroup(p.left_point()) != getPointGroup(p.up_point())))
             --liberty;
 
-        if ((p.left_down_point().x <= W && p.left_down_point().y >= 1) &&
+        if ((p.left_down_point().x <= W - 1 && p.left_down_point().y >= 0) &&
                 (getPointState(p.left_down_point()) == PointState::NA) &&
                 (getPointState(p.left_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
                 (getPointState(p.down_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
                 (getPointGroup(p.left_point()) != getPointGroup(p.down_point())))
             --liberty;
 
-        if ((p.right_up_point().x >= 1 && p.right_up_point().y <= H) &&
+        if ((p.right_up_point().x >= 0 && p.right_up_point().y <= H - 1) &&
                 (getPointState(p.right_up_point()) == PointState::NA) &&
                 (getPointState(p.right_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
                 (getPointState(p.up_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
                 (getPointGroup(p.right_point()) != getPointGroup(p.up_point())))
             --liberty;
 
-        if ((p.right_down_point().x <= W && p.right_down_point().y <= H) &&
+        if ((p.right_down_point().x <= W - 1 && p.right_down_point().y <= H - 1) &&
                 (getPointState(p.right_down_point()) == PointState::NA) &&
                 (getPointState(p.right_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
                 (getPointState(p.down_point()) == getPointStateFromPlayer(getOpponentPlayer(player))) &&
