@@ -1066,7 +1066,7 @@ namespace board
         atari_capture_score = min_liberty == 1 ? 100 : 0;
 
         double nearby_score = 0;
-        const double nearby_score_weight = 0.2;
+        const double nearby_score_weight = 0.1;
 
         double nearby_base_score = 100;
         double dis = 0;
@@ -1094,14 +1094,16 @@ namespace board
         {
             score += position_score * (1 - step / 30.0) * 0.25;
             score += (liberty_score  + atari_capture_score + nearby_score) * (step / 90.0) * 0.25;
+            score += nearby_score * 0.1;
         }
-        else if (step <= 320)
+        else if (step <= 220)
         {
             score += (liberty_score  + atari_capture_score + nearby_score) * 0.25 / 3.0;
+            score += nearby_score * 0.1;
         }
         else
         {
-            score += (liberty_score  + atari_capture_score) * 0.25 / 2.0;
+            score += (liberty_score  + atari_capture_score) * 0.35 / 2.0;
         }
 
         return score;
