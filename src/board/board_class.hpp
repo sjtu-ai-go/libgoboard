@@ -1026,7 +1026,8 @@ namespace board
     {
         double score = 0;
 
-        const double full_score = 100;
+        bool hasOurs = false;
+        bool hasOppo = false;
 
         std::size_t step = getStep();
 
@@ -1054,6 +1055,8 @@ namespace board
 
         int min_liberty = 361;
         p.for_each_adjacent([&](PointType adjP) {
+            hasOurs = hasOurs || getPointState(adjP) == getPointStateFromPlayer(player);
+            hasOppo = hasOppo || getPointState(adjP) == getPointStateFromPlayer(getOpponentPlayer(player));
             GroupConstIterator group = getPointGroup(adjP);
             min_liberty = std::min(min_liberty, (int)group->getLiberty());
         });
@@ -1066,7 +1069,7 @@ namespace board
         atari_capture_score = min_liberty == 1 ? 100 : 0;
 
         double nearby_score = 0;
-        const double nearby_score_weight = 0.1;
+        const double nearby_score_weight = 0.2;
 
         double nearby_base_score = 100;
         double dis = 0;
@@ -1084,6 +1087,10 @@ namespace board
             nearby_base_score -= 25;
         }
 
+        double battlefield_score = 0;
+        const double battlefield_score_weight = 0.5;
+        battlefield_score = (hasOurs && hasOppo) ? 100 : 0;
+
         score = default_score * default_score_weight;
         score += border_score * border_score_weight;
         score += position_score * position_score_weight;
@@ -1094,16 +1101,15 @@ namespace board
         {
             score += position_score * (1 - step / 30.0) * 0.25;
             score += (liberty_score  + atari_capture_score + nearby_score) * (step / 90.0) * 0.25;
-            score += nearby_score * 0.1;
         }
-        else if (step <= 220)
+        else if (step <= 190)
         {
             score += (liberty_score  + atari_capture_score + nearby_score) * 0.25 / 3.0;
-            score += nearby_score * 0.1;
         }
         else
         {
-            score += (liberty_score  + atari_capture_score) * 0.35 / 2.0;
+            score += (liberty_score  + atari_capture_score) * 0.25 / 2.0;
+            score += battlefield_score * battlefield_score_weight;
         }
 
         return score;
